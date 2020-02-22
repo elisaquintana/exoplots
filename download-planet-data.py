@@ -9,22 +9,22 @@ NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nste
 # All planets
 print('Downloading all confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*')
-df.to_csv('confirmed-planets.csv')
+df.to_csv('data/confirmed-planets.csv')
 
 # All Kepler planets
 print('Downloading Kepler confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*&where=pl_kepflag>0')
-df.to_csv('kepler-confirmed-planets.csv')
+df.to_csv('data/kepler-confirmed-planets.csv')
 
 # All K2 planets
 print('Downloading K2 confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*&where=pl_k2flag>0')
-df.to_csv('k2-confirmed-planets.csv')
+df.to_csv('data/k2-confirmed-planets.csv')
 
 # All TESS planets
 print('Downloading TESS confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*&where=pl_facility+like+%27TESS%27')
-df.to_csv('tess-confirmed-planets.csv')
+df.to_csv('data/tess-confirmed-planets.csv')
 
 
 # The "cumulative" table includes all Kepler Objects of Interest (planet candidates)
@@ -33,13 +33,13 @@ df.to_csv('tess-confirmed-planets.csv')
 print('Downloading Kepler candidate planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*'
                  '&where=koi_disposition+like+%27CANDIDATE%27')
-df.to_csv('kepler-candidate-only-planets.csv')
+df.to_csv('data/kepler-candidate-only-planets.csv')
 
 # Here we are including CONFIRMED and CANDIDATE (and excluding FALSE POSITIVE)
 print('Downloading Kepler confirmed and candidate planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*'
                  '&where=koi_disposition+like+%27C%25%27')
-df.to_csv('kepler-confirmed-and-candidate-planets.csv')
+df.to_csv('data/kepler-confirmed-and-candidate-planets.csv')
 
 
 # The 'k2candidates' table includes all K2 planet candidates.
@@ -48,22 +48,22 @@ df.to_csv('kepler-confirmed-and-candidate-planets.csv')
 print('Downloading K2 candidate planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*'
                  '&where=k2c_disp+like+%27CANDIDATE%27+and+k2c_recentflag=1')
-df.to_csv('k2-candidate-only-planets.csv')
+df.to_csv('data/k2-candidate-only-planets.csv')
 
 # Here we are including CANDIDATES and CONFIRMED (and excluding FALSE POSITIVE)
 print('Downloading K2 confirmed and candidate planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*'
                  '&where=k2c_disp+like+%27C%25%27+and+k2c_recentflag=1')
-df.to_csv('k2-confirmed-and-candidate-planets.csv')
+df.to_csv('data/k2-confirmed-and-candidate-planets.csv')
 
 # Later we will include TESS candidates but will need to pull from ExoFOP/TFOP
 #
 # wget "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=*&where=pl_facility like '%TESS%'" -O "tess-confirmed-planets.csv"
 
 # Current line count as of Feb 21, 2020
-#     4127 confirmed-planets.csv
-#    1326 k2-candidate-only-planets.csv
-#    2332 k2-confirmed-and-candidate-planets.csv
+#       4127 confirmed-planets.csv
+#     892 k2-candidate-only-planets.csv
+#    1236 k2-confirmed-and-candidate-planets.csv
 #     431 k2-confirmed-planets.csv
 #    2421 kepler-candidate-only-planets.csv
 #    4724 kepler-confirmed-and-candidate-planets.csv
