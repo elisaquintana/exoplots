@@ -56,6 +56,13 @@ df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*'
                  '&where=k2c_disp+like+%27C%25%27+and+k2c_recentflag=1')
 df.to_csv('data/k2-confirmed-and-candidate-planets.csv')
 
+# The "k2targets" table
+print('Downloading K2 targets from NExSci...')
+df = pd.read_csv(NEXSCI_API + '?table=k2targets&select=*')
+df.to_csv('data/k2-targets.csv')
+
+
+
 # Later we will include TESS candidates but will need to pull from ExoFOP/TFOP
 #
 # wget "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=*&where=pl_facility like '%TESS%'" -O "tess-confirmed-planets.csv"
