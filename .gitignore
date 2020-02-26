@@ -136,3 +136,6 @@ ENV/
 *.app
 
 *.dSYM/
+
+# PyCharm stuff
+.idea
