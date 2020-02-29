@@ -1,5 +1,5 @@
-This is Elisa's website
+Exoplots
 -------
 
 
-{% include planets.html %}
+{% include period_radius.html %}

@@ -1,0 +1,26 @@
+attrs:
+    Figure:
+        # background_fill_color: '#2F2F2F'
+        # border_fill_color: '#2F2F2F'
+        outline_line_color: 'black'
+        outline_line_width: 2
+    Grid:
+        grid_line_width: 2
+        # grid_line_dash: [6, 4]
+        # grid_line_alpha: .3
+    Title:
+        align: 'center'
+        text_font_size: "22pt"
+    Axis:
+        axis_label_text_font_size: "18pt"
+        major_label_text_font_size: "15pt"
+        axis_label_text_font_style: 'normal'
+        axis_line_width: 2
+        major_tick_line_width: 2
+        minor_tick_line_width: 1.5
+        major_tick_in: 0
+        minor_tick_in: 0
+        major_tick_out: 8
+        minor_tick_out: 5
+    Legend:
+        label_text_font_size: "15pt"
