@@ -1,4 +1,4 @@
-### Confirmed Period–Radius Distribution
+# Confirmed Period–Radius Distribution
 
 
 {% include period_radius_embed.html %}
