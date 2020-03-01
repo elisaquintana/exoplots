@@ -38,13 +38,12 @@ fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS)
 fig.add_tools(TapTool())
 
 
-missions = ['Kepler', 'K2', 'TESS', 'other']
+missions = ['Kepler', 'K2', 'TESS', 'Other']
 # colors = palettes.Category10[len(missions)]
 
 for ii, imiss in enumerate(missions):
     if imiss == 'other':
         good = df['pl_tranflag'].astype(bool) & (~np.in1d(df['pl_facility'], missions))
-        imiss = 'Ground'
     else:
         good = df['pl_tranflag'].astype(bool) & (df['pl_facility'] == imiss)
     
@@ -81,7 +80,7 @@ fig.legend.click_policy="hide"
 
 fig.title.text = 'Confirmed Transiting Planets'
 
-
+# XXX: need to add date/credit to this and every plot
 
 plotting.save(fig)
 
