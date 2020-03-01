@@ -49,7 +49,7 @@ for ii, imiss in enumerate(missions):
         good = df['pl_tranflag'].astype(bool) & (df['pl_facility'] == imiss)
     
     alpha = 1. - good.sum()/1000.
-    alpha = max(0.5, alpha)
+    alpha = max(0.3, alpha)
     
     source = plotting.ColumnDataSource(data=dict(
     planet=df['pl_name'][good],
