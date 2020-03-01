@@ -42,7 +42,7 @@ missions = ['Kepler', 'K2', 'TESS', 'Other']
 # colors = palettes.Category10[len(missions)]
 
 for ii, imiss in enumerate(missions):
-    if imiss == 'other':
+    if imiss == 'Other':
         good = df['pl_tranflag'].astype(bool) & (~np.in1d(df['pl_facility'], missions))
     else:
         good = df['pl_tranflag'].astype(bool) & (df['pl_facility'] == imiss)
