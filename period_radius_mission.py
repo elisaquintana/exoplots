@@ -4,6 +4,7 @@ from bokeh.themes import Theme
 from bokeh.io import curdoc
 from bokeh.models import NumeralTickFormatter, OpenURL, TapTool
 import numpy as np
+from bokeh.embed import components
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
@@ -16,6 +17,8 @@ markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 
 
 datafile = 'data/confirmed-planets.csv'
+
+embedfile = '_includes/period_radius_embed.html'
 
 df = pd.read_csv(datafile)
 
@@ -82,7 +85,10 @@ fig.title.text = 'Confirmed Transiting Planets'
 
 plotting.save(fig)
 
+script, div = components(fig)
 
-
+with open(embedfile, 'w') as ff:
+    ff.write(div)
+    ff.write(script)
 
 
