@@ -40,10 +40,10 @@ missions = ['Kepler', 'K2', 'TESS', 'other']
 
 for ii, imiss in enumerate(missions):
     if imiss == 'other':
-        good = df['pl_tranflag'].astype(bool) & ~np.in1d(df['pl_facility'], missions)
+        good = df['pl_tranflag'].astype(bool) & (~np.in1d(df['pl_facility'], missions))
         imiss = 'Ground'
     else:
-        good = df['pl_facility'] == imiss
+        good = df['pl_tranflag'].astype(bool) & (df['pl_facility'] == imiss)
     
     alpha = 1. - good.sum()/1000.
     alpha = max(0.5, alpha)
@@ -81,4 +81,8 @@ fig.title.text = 'Confirmed Transiting Planets'
 
 
 plotting.save(fig)
+
+
+
+
 
