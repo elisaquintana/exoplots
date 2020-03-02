@@ -43,12 +43,12 @@ missions = ['Kepler', 'K2', 'TESS', 'Other']
 
 for ii, imiss in enumerate(missions):
     if imiss == 'Other':
-        good = df['pl_tranflag'].astype(bool) & (~np.in1d(df['pl_facility'], missions))
+        good = (~np.in1d(df['pl_facility'], missions)) & np.isfinite(df['pl_rade']) & df['pl_tranflag'].astype(bool)
     else:
-        good = df['pl_tranflag'].astype(bool) & (df['pl_facility'] == imiss)
+        good = (df['pl_facility'] == imiss) & np.isfinite(df['pl_rade']) & df['pl_tranflag'].astype(bool)
     
     alpha = 1. - good.sum()/1000.
-    alpha = max(0.3, alpha)
+    alpha = max(0.2, alpha)
     
     source = plotting.ColumnDataSource(data=dict(
     planet=df['pl_name'][good],
@@ -56,7 +56,7 @@ for ii, imiss in enumerate(missions):
     radius=df['pl_rade'][good],
     host=df['pl_hostname'][good]
     ))
-    
+    print(good.sum())
     
     glyph = fig.scatter('period', 'radius', color=colors[ii], source=source, size=8,
                legend_label=imiss, muted_alpha=0.1, muted_color=colors[ii],
