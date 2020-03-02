@@ -19,6 +19,7 @@ markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 datafile = 'data/confirmed-planets.csv'
 
 embedfile = '_includes/period_radius_embed.html'
+fullfile = '_includes/period_radius.html'
 
 df = pd.read_csv(datafile)
 
@@ -26,12 +27,12 @@ df = pd.read_csv(datafile)
 df['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
 
 
-plotting.output_file('_includes/period_radius.html', title='Period Radius Plot')
+plotting.output_file(fullfile, title='Period Radius Plot')
 
 TOOLTIPS = [
     ("Planet", "@planet"),
-    ("Period", "@period{0,0[.]000}"),
-    ("Radius", "@radius{0,0[.]00}"),
+    ("Period", "@period{0,0[.][0000]}"),
+    ("Radius", "@radius{0,0[.][000]}"),
 ]
 
 fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS)
@@ -43,9 +44,11 @@ missions = ['Kepler', 'K2', 'TESS', 'Other']
 
 for ii, imiss in enumerate(missions):
     if imiss == 'Other':
-        good = (~np.in1d(df['pl_facility'], missions)) & np.isfinite(df['pl_rade']) & df['pl_tranflag'].astype(bool)
+        good = ((~np.in1d(df['pl_facility'], missions)) & np.isfinite(df['pl_rade']) & 
+                np.isfinite(df['pl_orbper']) & df['pl_tranflag'].astype(bool))
     else:
-        good = (df['pl_facility'] == imiss) & np.isfinite(df['pl_rade']) & df['pl_tranflag'].astype(bool)
+        good = ((df['pl_facility'] == imiss) & np.isfinite(df['pl_rade']) & 
+                np.isfinite(df['pl_orbper']) & df['pl_tranflag'].astype(bool))
     
     alpha = 1. - good.sum()/1000.
     alpha = max(0.2, alpha)
@@ -70,10 +73,10 @@ taptool.callback = OpenURL(url=url)
 
 
 fig.yaxis.axis_label = 'Radius (Earth Radii)'
-fig.yaxis.formatter = NumeralTickFormatter(format='0,0[.]00')
+fig.yaxis.formatter = NumeralTickFormatter(format='0,0[.][0000]')
 
 fig.xaxis.axis_label = 'Period (days)'
-fig.xaxis.formatter = NumeralTickFormatter(format='0,0[.]00')
+fig.xaxis.formatter = NumeralTickFormatter(format='0,0[.][0000]')
 
 fig.legend.location = 'bottom_right'
 fig.legend.click_policy="hide"
