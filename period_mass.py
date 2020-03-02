@@ -112,6 +112,7 @@ fig.xaxis.axis_label = 'Period (days)'
 fig.xaxis.formatter = FuncTickFormatter(code=code)
 # fig.xaxis.major_label_orientation = 'vertical'
 
+# XXX: add "discovered via method" label to legend
 fig.legend.location = 'bottom_right'
 fig.legend.click_policy="hide"
 
