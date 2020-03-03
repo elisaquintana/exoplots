@@ -161,8 +161,7 @@ legend.margin = 3
 legend.border_line_color = None
 
 fig.add_layout(legend, 'above')
-#fig.legend.location = 'bottom_right'
-#fig.legend.click_policy="hide"
+legend.click_policy="hide"
 
 fig.title.text = 'Confirmed Planets'
 
