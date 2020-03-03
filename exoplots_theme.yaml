@@ -4,7 +4,7 @@ attrs:
         # border_fill_color: "#2F2F2F"
         outline_line_color: "black"
         outline_line_width: 2.5
-        plot_width: 700
+        plot_width: 750
         plot_height: 600
     Grid:
         grid_line_width: 2.5

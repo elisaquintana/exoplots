@@ -5,6 +5,9 @@ from bokeh.io import curdoc
 from bokeh.models import NumeralTickFormatter, OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
+from bokeh.models import LogAxis, DataRange1d, Range1d, Label
+import os
+from datetime import datetime
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
@@ -23,13 +26,16 @@ fullfile = '_includes/period_mass.html'
 
 df = pd.read_csv(datafile)
 
+
+modtime = datetime.fromtimestamp(os.path.getmtime(datafile))
+
 # get rid of the long name with just TESS
 df['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
 
 
 code = """
 logtick = Math.log10(tick);
-if ((logtick > -3) && (logtick < 4)){
+if ((logtick > -3) && (logtick < 3)){
     return tick.toLocaleString();
 } else {
     power = Math.floor(logtick);
@@ -54,16 +60,19 @@ if ((logtick > -3) && (logtick < 4)){
 
 plotting.output_file(fullfile, title='Period Mass Plot')
 
-# XXX: switch from Jupiter to Earth masses at small planets. Also add an Earth mass axis
 TOOLTIPS = [
     ("Planet", "@planet"),
-    ("Period", "@period{0,0[.][0000]}"),
-    ("Mass", "@mass{0,0[.][0000]}"),
+    ("Period", "@period{0,0[.][0000]} days"),
+    ("Mass", "@mass{0,0[.][00]} Earth; @jupmass{0,0[.][0000]} Jup"),
     ("Discovered via", "@method")
 ]
 
-fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS)
+fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS) # y_range=(0.1,10)
 fig.add_tools(TapTool())
+
+
+ymin = 1
+ymax = 1
 
 
 methods = ['Transit', 'Radial Velocity', 'Timing Variations', 'Other']
@@ -71,13 +80,13 @@ methods = ['Transit', 'Radial Velocity', 'Timing Variations', 'Other']
 for ii, imeth in enumerate(methods):
     if imeth == 'Other':
         good = ((~np.in1d(df['pl_discmethod'], methods)) & (~df['pl_discmethod'].str.contains('Timing')) & 
-                np.isfinite(df['pl_bmassj']) & np.isfinite(df['pl_orbper']))
+                np.isfinite(df['pl_bmasse']) & np.isfinite(df['pl_orbper']))
         
     elif imeth == 'Timing Variations':
         good = (df['pl_discmethod'].str.contains('Timing') & 
-                np.isfinite(df['pl_bmassj']) & np.isfinite(df['pl_orbper']))
+                np.isfinite(df['pl_bmasse']) & np.isfinite(df['pl_orbper']))
     else:
-        good = ((df['pl_discmethod'] == imeth) & np.isfinite(df['pl_bmassj']) & 
+        good = ((df['pl_discmethod'] == imeth) & np.isfinite(df['pl_bmasse']) & 
                 np.isfinite(df['pl_orbper']))
     
     alpha = 1. - good.sum()/1000.
@@ -88,8 +97,9 @@ for ii, imeth in enumerate(methods):
     period=df['pl_orbper'][good],
     radius=df['pl_rade'][good],
     host=df['pl_hostname'][good],
-    mass=df['pl_bmassj'][good],
-    method=df['pl_discmethod'][good]
+    mass=df['pl_bmasse'][good],
+    method=df['pl_discmethod'][good],
+    jupmass=df['pl_bmassj'][good]
     ))
     print(good.sum())
     
@@ -97,14 +107,30 @@ for ii, imeth in enumerate(methods):
                legend_label=imeth, muted_alpha=0.1, muted_color=colors[ii],
                alpha=alpha, marker=markers[ii], nonselection_alpha=alpha,
                nonselection_color=colors[ii])
-
+    
+    ymin = min(ymin, source.data['mass'].min())
+    ymax = max(ymax, source.data['mass'].max())
 
 url = "https://exoplanetarchive.ipac.caltech.edu/overview/@host"
 taptool = fig.select(TapTool)
 taptool.callback = OpenURL(url=url)
 
 
-fig.yaxis.axis_label = 'Mass (Jupiter Masses)'
+
+ydiff = np.log10(ymax) - np.log10(ymin)
+
+ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
+yend = 10.**(np.log10(ymax) + 0.05*ydiff)
+
+# jupiter/earth mass ratio
+massratio = 317.8
+
+fig.extra_y_ranges = {"jup": Range1d(start=ystart/massratio, end=yend/massratio)}
+fig.add_layout(LogAxis(y_range_name="jup"), 'right')
+
+
+
+fig.yaxis.axis_label = 'Mass (Earth Masses)'
 fig.yaxis.formatter = FuncTickFormatter(code=code)
 
 fig.xaxis.axis_label = 'Period (days)'
@@ -112,13 +138,37 @@ fig.xaxis.axis_label = 'Period (days)'
 fig.xaxis.formatter = FuncTickFormatter(code=code)
 # fig.xaxis.major_label_orientation = 'vertical'
 
+fig.right[0].axis_label = 'Mass (Jupiter Masses)'
+# fig.right[0].major_label_orientation = 5.
+
+
 # XXX: add "discovered via method" label to legend
 fig.legend.location = 'bottom_right'
 fig.legend.click_policy="hide"
 
 fig.title.text = 'Confirmed Planets'
 
-# XXX: need to add date/credit to this and every plot
+
+
+modtimestr = modtime.strftime('%Y %b %d')
+
+label_opts1 = dict(
+    x=-80, y=50,
+    x_units='screen', y_units='screen'
+)
+
+label_opts2 = dict(
+    x=-80, y=50,
+    x_units='screen', y_units='screen'
+)
+
+msg1 = 'By Exoplots'
+
+caption1 = Label(text=msg1, **label_opts1)
+caption2 = Label(text=modtimestr, **label_opts2)
+
+fig.add_layout(caption1, 'below')
+fig.add_layout(caption2, 'below')
 
 plotting.save(fig)
 
