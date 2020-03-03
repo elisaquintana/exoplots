@@ -2,10 +2,10 @@ import pandas as pd
 from bokeh import plotting
 from bokeh.themes import Theme
 from bokeh.io import curdoc
-from bokeh.models import NumeralTickFormatter, OpenURL, TapTool, FuncTickFormatter
+from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
-from bokeh.models import LogAxis, DataRange1d, Range1d, Label
+from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
 import os
 from datetime import datetime
 
@@ -14,8 +14,8 @@ curdoc().theme = theme
 
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#66ccee', '#aa3377', '#ccbb44', '#4477aa', 
-          '#aaaaaa']
+colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
+          '#aaaaaa', '#66ccee']
 markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 
 
@@ -77,6 +77,11 @@ ymax = 1
 
 methods = ['Transit', 'Radial Velocity', 'Timing Variations', 'Other']
 
+
+
+glyphs = []
+legs = []
+
 for ii, imeth in enumerate(methods):
     if imeth == 'Other':
         good = ((~np.in1d(df['pl_discmethod'], methods)) & (~df['pl_discmethod'].str.contains('Timing')) & 
@@ -104,9 +109,11 @@ for ii, imeth in enumerate(methods):
     print(good.sum())
     
     glyph = fig.scatter('period', 'mass', color=colors[ii], source=source, size=8,
-               legend_label=imeth, muted_alpha=0.1, muted_color=colors[ii],
+               muted_alpha=0.1, muted_color=colors[ii],
                alpha=alpha, marker=markers[ii], nonselection_alpha=alpha,
                nonselection_color=colors[ii])
+    glyphs.append(glyph)
+    legs.append(imeth)
     
     ymin = min(ymin, source.data['mass'].min())
     ymax = max(ymax, source.data['mass'].max())
@@ -141,10 +148,21 @@ fig.xaxis.formatter = FuncTickFormatter(code=code)
 fig.right[0].axis_label = 'Mass (Jupiter Masses)'
 # fig.right[0].major_label_orientation = 5.
 
+items = [LegendItem(label=ii, renderers=[jj]) for ii, jj in zip(legs, glyphs)]
+legend = Legend(items=items, location="center")
+legend.title = 'Discovered via'
+legend.orientation = 'horizontal'
+legend.label_text_font_size = "14pt"
 
-# XXX: add "discovered via method" label to legend
-fig.legend.location = 'bottom_right'
-fig.legend.click_policy="hide"
+legend.title_text_font_style = 'bold'
+legend.title_text_font_size = '14pt'
+legend.title_standoff = 0
+legend.margin = 3
+legend.border_line_color = None
+
+fig.add_layout(legend, 'above')
+#fig.legend.location = 'bottom_right'
+#fig.legend.click_policy="hide"
 
 fig.title.text = 'Confirmed Planets'
 
@@ -153,12 +171,12 @@ fig.title.text = 'Confirmed Planets'
 modtimestr = modtime.strftime('%Y %b %d')
 
 label_opts1 = dict(
-    x=-80, y=50,
+    x=-84, y=42,
     x_units='screen', y_units='screen'
 )
 
 label_opts2 = dict(
-    x=-80, y=50,
+    x=-84, y=47,
     x_units='screen', y_units='screen'
 )
 
