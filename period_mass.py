@@ -158,6 +158,7 @@ legend.title_text_font_size = '14pt'
 legend.title_standoff = 0
 legend.margin = 3
 legend.border_line_color = None
+legend.spacing = 17
 
 fig.add_layout(legend, 'above')
 legend.click_policy="hide"
