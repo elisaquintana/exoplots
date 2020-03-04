@@ -63,7 +63,8 @@ plotting.output_file(fullfile, title='Period Radius Plot')
 TOOLTIPS = [
     ("Planet", "@planet"),
     ("Period", "@period{0,0[.][0000]} days"),
-    ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup")
+    ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup"),
+    ("Discovered by", "@discovery")
 ]
 
 fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS) # y_range=(0.1,10)
@@ -97,7 +98,8 @@ for ii, imiss in enumerate(missions):
     period=df['pl_orbper'][good],
     radius=df['pl_rade'][good],
     jupradius=df['pl_radj'][good],
-    host=df['pl_hostname'][good]
+    host=df['pl_hostname'][good],
+    discovery=df['pl_facility'][good]
     ))
     print(imiss, ': ', good.sum())
     
