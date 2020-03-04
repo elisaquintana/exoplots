@@ -2,17 +2,20 @@ import pandas as pd
 from bokeh import plotting
 from bokeh.themes import Theme
 from bokeh.io import curdoc
-from bokeh.models import NumeralTickFormatter, OpenURL, TapTool
+from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
+from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
+import os
+from datetime import datetime
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#66ccee', '#aa3377', '#ccbb44', '#4477aa', 
-          '#aaaaaa']
+colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
+          '#aaaaaa', '#66ccee']
 markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 
 
@@ -23,26 +26,62 @@ fullfile = '_includes/period_radius.html'
 
 df = pd.read_csv(datafile)
 
+
+modtime = datetime.fromtimestamp(os.path.getmtime(datafile))
+
 # get rid of the long name with just TESS
 df['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
+
+
+code = """
+logtick = Math.log10(tick);
+if ((logtick > -3) && (logtick < 5)){
+    return tick.toLocaleString();
+} else {
+    power = Math.floor(logtick);
+    retval = 10 + (power.toString()
+             .split('')
+             .map(function (d) { return d === '-' ? '⁻' : '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; })
+             .join(''));
+    front = (tick/Math.pow(10, power)).toPrecision(2).toString().slice(0,3);
+    
+    if (front == '1.0'){
+        return retval
+    }
+    else if (front.slice(1,3) == '.0'){
+        return front[0] + 'x' + retval
+    }
+    
+    return front + 'x' + retval
+}
+"""
+
 
 
 plotting.output_file(fullfile, title='Period Radius Plot')
 
 TOOLTIPS = [
     ("Planet", "@planet"),
-    ("Period", "@period{0,0[.][0000]}"),
-    ("Radius", "@radius{0,0[.][000]}"),
+    ("Period", "@period{0,0[.][0000]} days"),
+    ("Radius", "@radius{0,0[.][00]} Earth; @jupradius{0,0[.][0000]} Jup")
 ]
 
-fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS)
+fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS) # y_range=(0.1,10)
 fig.add_tools(TapTool())
 
 
-missions = ['Kepler', 'K2', 'TESS', 'Other']
-# colors = palettes.Category10[len(missions)]
+ymin = 1
+ymax = 1
 
-for ii, imiss in enumerate(missions):
+
+missions = ['Kepler', 'K2', 'TESS', 'Other']
+
+
+
+glyphs = []
+legs = []
+
+for ii, imiss in enumerate(missions):    
     if imiss == 'Other':
         good = ((~np.in1d(df['pl_facility'], missions)) & np.isfinite(df['pl_rade']) & 
                 np.isfinite(df['pl_orbper']) & df['pl_tranflag'].astype(bool))
@@ -57,33 +96,90 @@ for ii, imiss in enumerate(missions):
     planet=df['pl_name'][good],
     period=df['pl_orbper'][good],
     radius=df['pl_rade'][good],
+    jupradius=df['pl_radj'][good],
     host=df['pl_hostname'][good]
     ))
-    print(good.sum())
+    print(imiss, ': ', good.sum())
     
     glyph = fig.scatter('period', 'radius', color=colors[ii], source=source, size=8,
-               legend_label=imiss, muted_alpha=0.1, muted_color=colors[ii],
+               muted_alpha=0.1, muted_color=colors[ii],
                alpha=alpha, marker=markers[ii], nonselection_alpha=alpha,
                nonselection_color=colors[ii])
-
+    glyphs.append(glyph)
+    legs.append(imiss)
+    
+    ymin = min(ymin, source.data['radius'].min())
+    ymax = max(ymax, source.data['radius'].max())
 
 url = "https://exoplanetarchive.ipac.caltech.edu/overview/@host"
 taptool = fig.select(TapTool)
 taptool.callback = OpenURL(url=url)
 
 
+
+ydiff = np.log10(ymax) - np.log10(ymin)
+
+ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
+yend = 10.**(np.log10(ymax) + 0.05*ydiff)
+
+# jupiter/earth radius ratio
+radratio = 11.21
+
+fig.extra_y_ranges = {"jup": Range1d(start=ystart/radratio, end=yend/radratio)}
+fig.add_layout(LogAxis(y_range_name="jup"), 'right')
+
+
+
 fig.yaxis.axis_label = 'Radius (Earth Radii)'
-fig.yaxis.formatter = NumeralTickFormatter(format='0,0[.][0000]')
+fig.yaxis.formatter = FuncTickFormatter(code=code)
 
 fig.xaxis.axis_label = 'Period (days)'
-fig.xaxis.formatter = NumeralTickFormatter(format='0,0[.][0000]')
+#fig.xaxis.formatter = NumeralTickFormatter(format='0,0[.][00000]')
+fig.xaxis.formatter = FuncTickFormatter(code=code)
+# fig.xaxis.major_label_orientation = 'vertical'
 
-fig.legend.location = 'bottom_right'
-fig.legend.click_policy="hide"
+fig.right[0].axis_label = 'Radius (Jupiter Radii)'
+# fig.right[0].major_label_orientation = 5.
+
+items = [LegendItem(label=ii, renderers=[jj]) for ii, jj in zip(legs, glyphs)]
+legend = Legend(items=items, location="center")
+legend.title = 'Discovered by'
+legend.orientation = 'horizontal'
+legend.label_text_font_size = "14pt"
+
+legend.title_text_font_style = 'bold'
+legend.title_text_font_size = '14pt'
+legend.title_standoff = 0
+legend.margin = 3
+legend.border_line_color = None
+legend.spacing = 25
+
+fig.add_layout(legend, 'above')
+legend.click_policy="hide"
 
 fig.title.text = 'Confirmed Transiting Planets'
 
-# XXX: need to add date/credit to this and every plot
+
+
+modtimestr = modtime.strftime('%Y %b %d')
+
+label_opts1 = dict(
+    x=-68, y=42,
+    x_units='screen', y_units='screen'
+)
+
+label_opts2 = dict(
+    x=-68, y=47,
+    x_units='screen', y_units='screen'
+)
+
+msg1 = 'By Exoplots'
+
+caption1 = Label(text=msg1, **label_opts1)
+caption2 = Label(text=modtimestr, **label_opts2)
+
+fig.add_layout(caption1, 'below')
+fig.add_layout(caption2, 'below')
 
 plotting.save(fig)
 
@@ -92,5 +188,4 @@ script, div = components(fig)
 with open(embedfile, 'w') as ff:
     ff.write(div)
     ff.write(script)
-
 

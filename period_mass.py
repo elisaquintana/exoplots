@@ -100,13 +100,12 @@ for ii, imeth in enumerate(methods):
     source = plotting.ColumnDataSource(data=dict(
     planet=df['pl_name'][good],
     period=df['pl_orbper'][good],
-    radius=df['pl_rade'][good],
     host=df['pl_hostname'][good],
     mass=df['pl_bmasse'][good],
     method=df['pl_discmethod'][good],
     jupmass=df['pl_bmassj'][good]
     ))
-    print(good.sum())
+    print(imeth, ': ', good.sum())
     
     glyph = fig.scatter('period', 'mass', color=colors[ii], source=source, size=8,
                muted_alpha=0.1, muted_color=colors[ii],
