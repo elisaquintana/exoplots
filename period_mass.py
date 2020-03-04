@@ -179,13 +179,22 @@ label_opts2 = dict(
     x_units='screen', y_units='screen'
 )
 
+label_opts3 = dict(
+    x=612, y=64,
+    x_units='screen', y_units='screen', text_align='right',
+    text_font_size='9pt'
+)
+
 msg1 = 'By Exoplots'
+msg3 = 'Data: NASA Exoplanet Archive'
 
 caption1 = Label(text=msg1, **label_opts1)
 caption2 = Label(text=modtimestr, **label_opts2)
+caption3 = Label(text=msg3, **label_opts3)
 
 fig.add_layout(caption1, 'below')
 fig.add_layout(caption2, 'below')
+fig.add_layout(caption3, 'below')
 
 plotting.save(fig)
 
