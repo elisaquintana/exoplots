@@ -41,6 +41,11 @@ df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*'
                  '&where=koi_disposition+like+%27C%25%27')
 df.to_csv('data/kepler-confirmed-and-candidate-planets.csv')
 
+# full KOI table
+print('Downloading full KOI table from NExSci...')
+df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*')
+df.to_csv('data/kepler-kois-full.csv')
+
 
 # The 'k2candidates' table includes all K2 planet candidates.
 # Note: k2c_disp is the *archive* disposition
@@ -56,10 +61,14 @@ df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*'
                  '&where=k2c_disp+like+%27C%25%27+and+k2c_recentflag=1')
 df.to_csv('data/k2-confirmed-and-candidate-planets.csv')
 
+print('Downloading full K2 candidates table from NExSci...')
+df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*')
+df.to_csv('data/k2-candidates-table.csv')
+
 # The "k2targets" table
-print('Downloading K2 targets from NExSci...')
-df = pd.read_csv(NEXSCI_API + '?table=k2targets&select=*')
-df.to_csv('data/k2-targets.csv')
+#print('Downloading K2 targets from NExSci...')
+#df = pd.read_csv(NEXSCI_API + '?table=k2targets&select=*')
+#df.to_csv('data/k2-targets.csv')
 
 
 
