@@ -37,6 +37,8 @@ modtimekoi = datetime.fromtimestamp(os.path.getmtime(koifile))
 
 # get rid of the long name with just TESS
 dfcon['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
+# set all of these planets as confirmed
+dfcon['status'] = 'Confirmed'
 
 # run some checks to make sure things are as we think they should be
 koicon = dfkoi['koi_disposition'] == 'CONFIRMED'
@@ -44,6 +46,11 @@ koican = dfkoi['koi_disposition'] == 'CANDIDATE'
 
 # XXX: keep working on this
 notfound = ~np.in1d(dfkoi['kepler_name'][koicon], dfcon['pl_name'])
+
+k2con = dfk2['k2c_disp'] == 'CONFIRMED'
+k2can = dfk2['k2c_disp'] == 'CANDIDATE'
+
+notfound = ~np.in1d(dfk2['pl_name'][k2con], dfcon['pl_name'])
 
 
 code = """
@@ -118,7 +125,7 @@ for ii, imiss in enumerate(missions):
         jupradius=dfcon['pl_radj'][good],
         host=dfcon['pl_hostname'][good],
         discovery=dfcon['pl_facility'][good],
-        status='Confirmed'
+        status=dfcon['status'][good]
         ))
         print(imiss, ': ', good.sum())
     
