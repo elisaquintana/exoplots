@@ -70,6 +70,10 @@ df.to_csv('data/k2-candidates-table.csv')
 #df = pd.read_csv(NEXSCI_API + '?table=k2targets&select=*')
 #df.to_csv('data/k2-targets.csv')
 
+# get the TOI list from ExoFOP-TESS.
+print('Downloading full TESS candidates table from ExoFOP...')
+df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv')
+df.to_csv('data/tess-candidates.csv')
 
 
 # Later we will include TESS candidates but will need to pull from ExoFOP/TFOP

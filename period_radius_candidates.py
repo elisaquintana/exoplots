@@ -12,12 +12,16 @@ from datetime import datetime
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
+missions = ['Kepler Candidate', 'Kepler Confirmed', 'TESS Candidate', 
+            'K2 Candidate', 'K2 Confirmed', 'Other Confirmed', 'TESS Confirmed']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
-          '#aaaaaa', '#66ccee']
-markers = ['circle', 'circle_cross', 'square', 'square_cross', 'triangle', 
-           'inverted_triangle', 'diamond']
+colors = ['#228833', '#228833', '#ccbb44', '#ee6677', '#ee6677', '#aa3377', '#ccbb44']
+
+#colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
+#          '#aaaaaa', '#66ccee']
+markers = ['circle_cross', 'circle', 'inverted_triangle', 'square_cross', 
+           'square', 'diamond', 'triangle']
 
 
 datafile = 'data/confirmed-planets.csv'
@@ -124,25 +128,24 @@ ymin = 1
 ymax = 1
 
 
-missions = ['Kepler Confirmed', 'Kepler Candidate', 'K2 Confirmed',
-            'K2 Candidate', 'TESS Confirmed', 'TESS Candidate', 'Other Confirmed']
-
-
 
 glyphs = []
 legs = []
 
 for ii, imiss in enumerate(missions):  
     alpha = 0.3
+    size = 4
     if imiss == 'Other Confirmed':
         good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) & np.isfinite(dfcon['pl_rade']) & 
                 np.isfinite(dfcon['pl_orbper']) & dfcon['pl_tranflag'].astype(bool))
         alpha = 0.8
+        size = 8
     elif 'Confirmed' in imiss:
         fac = imiss.split()[0]
         good = ((dfcon['pl_facility'] == fac) & np.isfinite(dfcon['pl_rade']) & 
                 np.isfinite(dfcon['pl_orbper']) & dfcon['pl_tranflag'].astype(bool))
         alpha = 0.8
+        size = 6
     elif 'Kepler' in imiss:
         good = ((dfkoi['koi_disposition'] == 'Candidate') & np.isfinite(dfkoi['koi_period']) & 
                 np.isfinite(dfkoi['koi_prad']))
@@ -191,7 +194,7 @@ for ii, imiss in enumerate(missions):
         ))
         print(imiss, ': ', good.sum())
     
-    glyph = fig.scatter('period', 'radius', color=colors[ii], source=source, size=8,
+    glyph = fig.scatter('period', 'radius', color=colors[ii], source=source, size=size,
                muted_alpha=0.1, muted_color=colors[ii],
                alpha=alpha, marker=markers[ii], nonselection_alpha=alpha,
                nonselection_color=colors[ii])
@@ -228,8 +231,11 @@ fig.xaxis.formatter = FuncTickFormatter(code=code)
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'
 # fig.right[0].major_label_orientation = 5.
 
-items1 = [LegendItem(label=ii, renderers=[jj]) for ii, jj in list(zip(legs, glyphs))[::2]]
-items2 = [LegendItem(label=ii, renderers=[jj]) for ii, jj in list(zip(legs, glyphs))[1::2]]
+topleg = ['Kepler Confirmed', 'K2 Confirmed', 'TESS Confirmed', 'Other Confirmed']
+bottomleg = ['Kepler Candidate', 'K2 Candidate', 'TESS Candidate']
+
+items1 = [LegendItem(label=ii, renderers=[glyphs[missions.index(ii)]]) for ii in topleg]
+items2 = [LegendItem(label=ii, renderers=[glyphs[missions.index(ii)]]) for ii in bottomleg]
 
 for ii in np.arange(2):
     if ii == 0:
