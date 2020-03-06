@@ -12,22 +12,22 @@ from datetime import datetime
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
 
-missions = ['Kepler Candidate', 'Kepler Confirmed', 'TESS Candidate', 
-            'K2 Candidate', 'K2 Confirmed', 'Other Confirmed', 'TESS Confirmed']
+missions = ['Kepler Candidate', 'Kepler Confirmed', 
+            'K2 Candidate', 'K2 Confirmed', 'TESS Candidate', 'Other Confirmed', 'TESS Confirmed']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#228833', '#ccbb44', '#ee6677', '#ee6677', '#aa3377', '#ccbb44']
+colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377', '#ccbb44']
 
 #colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
 #          '#aaaaaa', '#66ccee']
-markers = ['circle_cross', 'circle', 'inverted_triangle', 'square_cross', 
-           'square', 'diamond', 'triangle']
+markers = ['circle_cross', 'circle', 'square_cross', 'square', 'inverted_triangle',
+           'diamond', 'triangle']
 
 
 datafile = 'data/confirmed-planets.csv'
 k2file = 'data/k2-candidates-table.csv'
 koifile = 'data/kepler-kois-full.csv'
-
+toifile = 'data/tess-candidates.csv'
 
 embedfile = '_includes/period_radius_candidates_embed.html'
 fullfile = '_includes/period_radius_candidates.html'
@@ -35,15 +35,32 @@ fullfile = '_includes/period_radius_candidates.html'
 dfcon = pd.read_csv(datafile)
 dfk2 = pd.read_csv(k2file)
 dfkoi = pd.read_csv(koifile)
+dftoi = pd.read_csv(toifile)
 
 modtimecon = datetime.fromtimestamp(os.path.getmtime(datafile))
 modtimek2 = datetime.fromtimestamp(os.path.getmtime(k2file))
 modtimekoi = datetime.fromtimestamp(os.path.getmtime(koifile))
+modtimetoi = datetime.fromtimestamp(os.path.getmtime(toifile))
 
 # get rid of the long name with just TESS
 dfcon['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
 # set all of these planets as confirmed
 dfcon['status'] = 'Confirmed'
+
+
+# get easier to reference names for things
+renames = {'TFOPWG Disposition': 'disp', 'TIC ID': 'TIC', 'Period (days)': 'period',
+           'Planet Radius (R_Earth)': 'prade'}
+dftoi.rename(columns=renames, inplace=True)
+
+# things that don't have a disposition get PC
+dftoi['disp'].replace(np.nan, 'PC', inplace=True)
+# change this to the status we want to report
+dftoi['disp'].replace('PC', 'Candidate', inplace=True)
+
+dftoi['TOI'] = 'TOI-' + dftoi['TOI'].astype(str)
+dftoi['host'] = 'TIC ' + dftoi['TIC'].astype(str)
+
 
 # make these not all caps
 dfkoi['koi_disposition'] = dfkoi['koi_disposition'].str.title()
@@ -54,8 +71,10 @@ dfkoi['kepoi_name'].replace(to_replace='K0+', value='KOI-', regex=True, inplace=
 
 # jupiter/earth radius ratio
 radratio = 11.21
-# give KOIs units of Jupiter radii
+# give KOIs/TOIs units of Jupiter radii
 dfkoi['koi_pradj'] = dfkoi['koi_prad'] / radratio
+dftoi['pradj'] = dftoi['prade'] / radratio
+
 
 # K2 tables don't have both columns always filled in
 noearth = (~np.isfinite(dfk2['pl_rade']) & np.isfinite(dfk2['pl_radj']))
@@ -78,12 +97,15 @@ notfound = ~np.in1d(dfk2['pl_name'][k2con], dfcon['pl_name'])
 # set the appropriate discover facility for candidates
 dfkoi['pl_facility'] = 'Kepler'
 dfk2['pl_facility'] = 'K2'
+dftoi['pl_facility'] = 'TESS'
 
 
 # where do we want to point people to on clicking?
 dfcon['url'] = 'https://exoplanetarchive.ipac.caltech.edu/overview/' + dfcon['pl_hostname']
 dfk2['url'] = 'https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' + dfk2['epic_name'].str.slice(5)
 dfkoi['url'] = 'https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=' + dfkoi['kepoi_name'].str.slice(0,-3) + '&type=KEPLER_TCE_HOST'
+dftoi['url'] = 'https://exofop.ipac.caltech.edu/tess/target.php?id=' + dftoi['TIC'].astype(str)
+
 
 code = """
 logtick = Math.log10(tick);
@@ -133,18 +155,18 @@ glyphs = []
 legs = []
 
 for ii, imiss in enumerate(missions):  
-    alpha = 0.3
+    alpha = 0.35
     size = 4
     if imiss == 'Other Confirmed':
         good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) & np.isfinite(dfcon['pl_rade']) & 
                 np.isfinite(dfcon['pl_orbper']) & dfcon['pl_tranflag'].astype(bool))
-        alpha = 0.8
+        alpha = 0.7
         size = 8
     elif 'Confirmed' in imiss:
         fac = imiss.split()[0]
         good = ((dfcon['pl_facility'] == fac) & np.isfinite(dfcon['pl_rade']) & 
                 np.isfinite(dfcon['pl_orbper']) & dfcon['pl_tranflag'].astype(bool))
-        alpha = 0.8
+        alpha = 0.7
         size = 6
     elif 'Kepler' in imiss:
         good = ((dfkoi['koi_disposition'] == 'Candidate') & np.isfinite(dfkoi['koi_period']) & 
@@ -175,7 +197,19 @@ for ii, imiss in enumerate(missions):
         ))
         print(imiss, ': ', good.sum())
     else:
-        pass
+        good = ((dftoi['disp'] == 'Candidate') & np.isfinite(dftoi['prade']) & 
+                np.isfinite(dftoi['period']))
+        source = plotting.ColumnDataSource(data=dict(
+        planet=dftoi['TOI'][good],
+        period=dftoi['period'][good],
+        radius=dftoi['prade'][good],
+        jupradius=dftoi['pradj'][good],
+        host=dftoi['host'][good],
+        discovery=dftoi['pl_facility'][good],
+        status=dftoi['disp'][good],
+        url=dftoi['url'][good]
+        ))
+        print(imiss, ': ', good.sum())
             
     
     #alpha = 1. - good.sum()/1000.
@@ -270,17 +304,17 @@ fig.title.text = 'Transiting Planets and Planet Candidates'
 modtimestr = modtimecon.strftime('%Y %b %d')
 
 label_opts1 = dict(
-    x=-68, y=42,
+    x=-85, y=42,
     x_units='screen', y_units='screen'
 )
 
 label_opts2 = dict(
-    x=-68, y=47,
+    x=-85, y=47,
     x_units='screen', y_units='screen'
 )
 
 label_opts3 = dict(
-    x=627, y=64,
+    x=612, y=64,
     x_units='screen', y_units='screen', text_align='right',
     text_font_size='9pt'
 )
