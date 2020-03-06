@@ -16,7 +16,8 @@ curdoc().theme = theme
 # other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
 colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
           '#aaaaaa', '#66ccee']
-markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
+markers = ['circle', 'circle_cross', 'square', 'square_cross', 'triangle', 
+           'inverted_triangle', 'diamond']
 
 
 datafile = 'data/confirmed-planets.csv'
@@ -40,22 +41,49 @@ dfcon['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TE
 # set all of these planets as confirmed
 dfcon['status'] = 'Confirmed'
 
-# run some checks to make sure things are as we think they should be
-koicon = dfkoi['koi_disposition'] == 'CONFIRMED'
-koican = dfkoi['koi_disposition'] == 'CANDIDATE'
+# make these not all caps
+dfkoi['koi_disposition'] = dfkoi['koi_disposition'].str.title()
+dfk2['k2c_disp'] = dfk2['k2c_disp'].str.title()
 
+# make KOIs into the format we expect
+dfkoi['kepoi_name'].replace(to_replace='K0+', value='KOI-', regex=True, inplace=True)
+
+# jupiter/earth radius ratio
+radratio = 11.21
+# give KOIs units of Jupiter radii
+dfkoi['koi_pradj'] = dfkoi['koi_prad'] / radratio
+
+# K2 tables don't have both columns always filled in
+noearth = (~np.isfinite(dfk2['pl_rade']) & np.isfinite(dfk2['pl_radj']))
+dfk2.loc[noearth, 'pl_rade'] = dfk2.loc[noearth, 'pl_radj'] * radratio
+
+nojup = (np.isfinite(dfk2['pl_rade']) & (~np.isfinite(dfk2['pl_radj'])))
+dfk2.loc[nojup, 'pl_radj'] = dfk2.loc[nojup, 'pl_rade'] / radratio
+
+
+# run some checks to make sure things are as we think they should be
+koicon = dfkoi['koi_disposition'] == 'Confirmed'
+koican = dfkoi['koi_disposition'] == 'Candidate'
 # XXX: keep working on this
 notfound = ~np.in1d(dfkoi['kepler_name'][koicon], dfcon['pl_name'])
 
-k2con = dfk2['k2c_disp'] == 'CONFIRMED'
-k2can = dfk2['k2c_disp'] == 'CANDIDATE'
-
+k2con = dfk2['k2c_disp'] == 'Confirmed'
+k2can = dfk2['k2c_disp'] == 'Candidate'
 notfound = ~np.in1d(dfk2['pl_name'][k2con], dfcon['pl_name'])
 
+# set the appropriate discover facility for candidates
+dfkoi['pl_facility'] = 'Kepler'
+dfk2['pl_facility'] = 'K2'
+
+
+# where do we want to point people to on clicking?
+dfcon['url'] = 'https://exoplanetarchive.ipac.caltech.edu/overview/' + dfcon['pl_hostname']
+dfk2['url'] = 'https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' + dfk2['epic_name'].str.slice(5)
+dfkoi['url'] = 'https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=' + dfkoi['kepoi_name'].str.slice(0,-3) + '&type=KEPLER_TCE_HOST'
 
 code = """
 logtick = Math.log10(tick);
-if ((logtick > -3) && (logtick < 5)){
+if ((logtick > -3) && (logtick < 3)){
     return tick.toLocaleString();
 } else {
     power = Math.floor(logtick);
@@ -96,28 +124,61 @@ ymin = 1
 ymax = 1
 
 
-missions = ['Kepler Confirmed', 'Kepler Candidates', 'K2 Confirmed',
-            'K2 Candidates', 'TESS Confirmed', 'TESS Candidates', 'Other']
+missions = ['Kepler Confirmed', 'Kepler Candidate', 'K2 Confirmed',
+            'K2 Candidate', 'TESS Confirmed', 'TESS Candidate', 'Other Confirmed']
 
 
 
 glyphs = []
 legs = []
 
-for ii, imiss in enumerate(missions):    
-    if imiss == 'Other':
-        good = ((~np.in1d(dfcon['pl_facility'], missions)) & np.isfinite(dfcon['pl_rade']) & 
+for ii, imiss in enumerate(missions):  
+    alpha = 0.3
+    if imiss == 'Other Confirmed':
+        good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) & np.isfinite(dfcon['pl_rade']) & 
                 np.isfinite(dfcon['pl_orbper']) & dfcon['pl_tranflag'].astype(bool))
+        alpha = 0.8
     elif 'Confirmed' in imiss:
-        good = ((dfcon['pl_facility'] == imiss) & np.isfinite(dfcon['pl_rade']) & 
+        fac = imiss.split()[0]
+        good = ((dfcon['pl_facility'] == fac) & np.isfinite(dfcon['pl_rade']) & 
                 np.isfinite(dfcon['pl_orbper']) & dfcon['pl_tranflag'].astype(bool))
+        alpha = 0.8
+    elif 'Kepler' in imiss:
+        good = ((dfkoi['koi_disposition'] == 'Candidate') & np.isfinite(dfkoi['koi_period']) & 
+                np.isfinite(dfkoi['koi_prad']))
+        source = plotting.ColumnDataSource(data=dict(
+        planet=dfkoi['kepoi_name'][good],
+        period=dfkoi['koi_period'][good],
+        radius=dfkoi['koi_prad'][good],
+        jupradius=dfkoi['koi_pradj'][good],
+        host=dfkoi['kepid'][good],
+        discovery=dfkoi['pl_facility'][good],
+        status=dfkoi['koi_disposition'][good],
+        url=dfkoi['url'][good]
+        ))
+        print(imiss, ': ', good.sum())
+    elif 'K2' in imiss:
+        good = ((dfk2['k2c_disp'] == 'Candidate') & np.isfinite(dfk2['pl_rade']) & 
+                np.isfinite(dfk2['pl_orbper']) & dfk2['k2c_recentflag'].astype(bool))
+        source = plotting.ColumnDataSource(data=dict(
+        planet=dfk2['epic_candname'][good],
+        period=dfk2['pl_orbper'][good],
+        radius=dfk2['pl_rade'][good],
+        jupradius=dfk2['pl_radj'][good],
+        host=dfk2['epic_name'][good],
+        discovery=dfk2['pl_facility'][good],
+        status=dfk2['k2c_disp'][good],
+        url=dfk2['url'][good]
+        ))
+        print(imiss, ': ', good.sum())
     else:
-        continue
+        pass
+            
     
-    alpha = 1. - good.sum()/1000.
-    alpha = max(0.2, alpha)
+    #alpha = 1. - good.sum()/1000.
+    #alpha = max(0.2, alpha)
     
-    if imiss == 'Other' or 'Confirmed' in imiss:
+    if 'Confirmed' in imiss:
         source = plotting.ColumnDataSource(data=dict(
         planet=dfcon['pl_name'][good],
         period=dfcon['pl_orbper'][good],
@@ -125,7 +186,8 @@ for ii, imiss in enumerate(missions):
         jupradius=dfcon['pl_radj'][good],
         host=dfcon['pl_hostname'][good],
         discovery=dfcon['pl_facility'][good],
-        status=dfcon['status'][good]
+        status=dfcon['status'][good],
+        url=dfcon['url'][good]
         ))
         print(imiss, ': ', good.sum())
     
@@ -139,7 +201,7 @@ for ii, imiss in enumerate(missions):
     ymin = min(ymin, source.data['radius'].min())
     ymax = max(ymax, source.data['radius'].max())
 
-url = "https://exoplanetarchive.ipac.caltech.edu/overview/@host"
+url = "@url"
 taptool = fig.select(TapTool)
 taptool.callback = OpenURL(url=url)
 
@@ -149,9 +211,6 @@ ydiff = np.log10(ymax) - np.log10(ymin)
 
 ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
 yend = 10.**(np.log10(ymax) + 0.05*ydiff)
-
-# jupiter/earth radius ratio
-radratio = 11.21
 
 fig.extra_y_ranges = {"jup": Range1d(start=ystart/radratio, end=yend/radratio)}
 fig.add_layout(LogAxis(y_range_name="jup"), 'right')
@@ -169,23 +228,36 @@ fig.xaxis.formatter = FuncTickFormatter(code=code)
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'
 # fig.right[0].major_label_orientation = 5.
 
-items = [LegendItem(label=ii, renderers=[jj]) for ii, jj in zip(legs, glyphs)]
-legend = Legend(items=items, location="center")
-legend.title = 'Discovered by'
-legend.orientation = 'horizontal'
-legend.label_text_font_size = "14pt"
+items1 = [LegendItem(label=ii, renderers=[jj]) for ii, jj in list(zip(legs, glyphs))[::2]]
+items2 = [LegendItem(label=ii, renderers=[jj]) for ii, jj in list(zip(legs, glyphs))[1::2]]
 
-legend.title_text_font_style = 'bold'
-legend.title_text_font_size = '14pt'
-legend.title_standoff = 0
-legend.margin = 3
-legend.border_line_color = None
-legend.spacing = 25
+for ii in np.arange(2):
+    if ii == 0:
+        items = items2
+    else:
+        items = items1
+    legend = Legend(items=items, location="center")
+    
+    if ii == 1:
+        legend.title = 'Discovered by and Status'
+        legend.title_text_font_style = 'bold'
+        legend.title_text_font_size = '14pt'
+        legend.title_standoff = 0
+        legend.spacing = 10
+    else:
+        legend.spacing = 11
 
-fig.add_layout(legend, 'above')
-legend.click_policy="hide"
+    legend.location = (-60,5)
+    legend.orientation = 'horizontal'
+    legend.label_text_font_size = "14pt"
+    legend.label_text_align = 'left'
+    legend.margin = 0
+    legend.border_line_color = None
+    
+    fig.add_layout(legend, 'above')
+    legend.click_policy="hide"
 
-fig.title.text = 'Confirmed Transiting Planets'
+fig.title.text = 'Transiting Planets and Planet Candidates'
 
 
 
