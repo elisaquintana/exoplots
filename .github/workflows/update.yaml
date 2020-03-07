@@ -1,12 +1,9 @@
 name: Download updates and regenerate plots
 
 on:
-  # Trigger the workflow on push or pull request,
+  # Trigger the workflow on push,
   # but only for the master branch
   push:
-    branches:
-      - master
-  pull_request:
     branches:
       - master
   schedule:
@@ -44,11 +41,7 @@ jobs:
     - uses: stefanzweifel/git-auto-commit-action@v4.1.0
       with:
         commit_message: Rerun with updated planet lists
-
-        # Optional name of the branch the commit should be pushed to
-        # Required if Action is used in Workflow listening to the `pull_request` event
-        branch: ${{ github.head_ref }}
-
+        
         # Optional commit user and author settings
         commit_user_name: GitHub Actions Bot
         commit_user_email: my-github-actions-bot@example.org
