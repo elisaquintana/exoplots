@@ -11,6 +11,7 @@ print('Downloading all confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*')
 df.to_csv('data/confirmed-planets.csv')
 
+"""
 # All Kepler planets
 print('Downloading Kepler confirmed planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=exoplanets&select=*&where=pl_kepflag>0')
@@ -40,13 +41,14 @@ print('Downloading Kepler confirmed and candidate planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*'
                  '&where=koi_disposition+like+%27C%25%27')
 df.to_csv('data/kepler-confirmed-and-candidate-planets.csv')
+"""
 
 # full KOI table
 print('Downloading full KOI table from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=cumulative&select=*')
 df.to_csv('data/kepler-kois-full.csv')
 
-
+"""
 # The 'k2candidates' table includes all K2 planet candidates.
 # Note: k2c_disp is the *archive* disposition
 # Here we are including CANDIDATES (and excluding FALSE POSITIVE and CONFIRMED)
@@ -60,6 +62,7 @@ print('Downloading K2 confirmed and candidate planets from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*'
                  '&where=k2c_disp+like+%27C%25%27+and+k2c_recentflag=1')
 df.to_csv('data/k2-confirmed-and-candidate-planets.csv')
+"""
 
 print('Downloading full K2 candidates table from NExSci...')
 df = pd.read_csv(NEXSCI_API + '?table=k2candidates&select=*')
