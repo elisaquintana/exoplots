@@ -326,7 +326,7 @@ label_opts4 = dict(
 )
 
 msg1 = 'By Exoplots'
-msg3 = 'Data: NASA Exoplanet Archive TEST'
+msg3 = 'Data: NASA Exoplanet Archive'
 msg4 = 'and ExoFOP-TESS'
 
 caption1 = Label(text=msg1, **label_opts1)

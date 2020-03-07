@@ -42,7 +42,3 @@ jobs:
       with:
         commit_message: Rerun with updated planet lists
         branch: master
-        # Optional commit user and author settings
-        commit_user_name: GitHub Actions Bot
-        commit_user_email: my-github-actions-bot@example.org
-        commit_author: Bot <actions@gitub.com>
