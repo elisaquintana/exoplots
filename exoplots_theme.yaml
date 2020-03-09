@@ -1,14 +1,11 @@
 attrs:
     Figure:
-        # background_fill_color: "#2F2F2F"
-        # border_fill_color: "#2F2F2F"
         outline_line_color: "black"
         outline_line_width: 2.5
         plot_width: 750
         plot_height: 600
     Grid:
         grid_line_width: 2.5
-        # grid_line_alpha: .3
     Title:
         align: "center"
         text_font_size: "24pt"
