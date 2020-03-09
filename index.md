@@ -4,7 +4,7 @@ title: All figures
 
 Welcome to Exoplots!
 
-### Confirmed Transiting Planet Period–Radius Distribution
+## Confirmed Transiting Planet Period–Radius Distribution
 
 
 {% include period_radius_embed.html %}
@@ -15,7 +15,7 @@ Archive Overview page. Clicking on the labels in the legend allows you to turn
 on and off individual collections of planets.
 
 
-### Confirmed Planet Period–Mass Distribution
+## Confirmed Planet Period–Mass Distribution
 
 {% include period_mass_embed.html %}
 
@@ -27,7 +27,7 @@ on and off individual collections of planets.
 
 
 
-### Period–Radius Distribution for Confirmed and Candidate Planets
+## Period–Radius Distribution for Confirmed and Candidate Planets
 
 {% include period_radius_candidates_embed.html %}
 
