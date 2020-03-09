@@ -3,6 +3,7 @@
 
 @import "{{ site.theme }}";
 
+// the heading at the top of every page is big enough without extra padding
 .page-header {
   @include large {
     padding: 0rem 0rem;
