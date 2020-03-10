@@ -1,4 +1,4 @@
 numpy
 pandas
-bokeh
+bokeh==1.4.0
 
