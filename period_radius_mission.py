@@ -5,7 +5,7 @@ from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
 from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-from .utils import load_data, get_update_time, log_axis_labels
+from utils import load_data, get_update_time, log_axis_labels
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
