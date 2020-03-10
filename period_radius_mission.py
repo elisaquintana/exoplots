@@ -70,7 +70,8 @@ for ii, imiss in enumerate(missions):
     radius=dfcon['pl_rade'][good],
     jupradius=dfcon['pl_radj'][good],
     host=dfcon['pl_hostname'][good],
-    discovery=dfcon['pl_facility'][good]
+    discovery=dfcon['pl_facility'][good],
+    url=dfcon['url'][good]
     ))
     print(imiss, ': ', good.sum())
     

@@ -73,7 +73,8 @@ for ii, imeth in enumerate(methods):
     host=dfcon['pl_hostname'][good],
     mass=dfcon['pl_bmasse'][good],
     method=dfcon['pl_discmethod'][good],
-    jupmass=dfcon['pl_bmassj'][good]
+    jupmass=dfcon['pl_bmassj'][good],
+    url=dfcon['url'][good]
     ))
     print(imeth, ': ', good.sum())
     
