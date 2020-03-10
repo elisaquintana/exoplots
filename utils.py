@@ -117,14 +117,19 @@ def load_data():
 
 def log_axis_labels(min_tick=-2.001, max_tick=3.):
     """
-    
+    Bokeh can't do subscript or superscript text, which includes scientific
+    notation in axis labels. This is a hack script that uses unicode
+    superscript values and manually creates pseudo-scientific notation axis
+    labels. Any values within log10(min_tick) and log10(max_tick) will be 
+    displayed as normal, while outside those bounds in either direction will
+    be converted to scientific notation.
 
     Parameters
     ----------
     min_tick : float, optional
         Maximum small log(10) value that will display in scientific notation
-        instead of the full decimal representation. The default is -3, meaning
-        axis labels will go from 0.001 to 10^-3.
+        instead of the full decimal representation. The default is -2.001,
+        meaning axis labels will go from 9x10^-3 to 0.01.
     max_tick : float, optional
         Minimum large log(10) value that will display in scientific notation
         instead of the full decimal representation. The default is 3, meaning
