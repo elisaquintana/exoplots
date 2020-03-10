@@ -12,7 +12,7 @@ curdoc().theme = theme
 
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
+colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
           '#aaaaaa', '#66ccee']
 markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 
