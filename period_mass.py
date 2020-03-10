@@ -5,7 +5,7 @@ from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
 from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-from utils import load_data, get_update_time
+from utils import load_data, get_update_time, log_axis_labels
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
@@ -24,28 +24,7 @@ fullfile = '_includes/period_mass.html'
 dfcon, dfkoi, dfk2, dftoi = load_data()
 
 
-code = """
-logtick = Math.log10(tick);
-if ((logtick > -3) && (logtick < 3)){
-    return tick.toLocaleString();
-} else {
-    power = Math.floor(logtick);
-    retval = 10 + (power.toString()
-             .split('')
-             .map(function (d) { return d === '-' ? '⁻' : '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; })
-             .join(''));
-    front = (tick/Math.pow(10, power)).toPrecision(2).toString().slice(0,3);
-    
-    if (front == '1.0'){
-        return retval
-    }
-    else if (front.slice(1,3) == '.0'){
-        return front[0] + 'x' + retval
-    }
-    
-    return front + 'x' + retval
-}
-"""
+code = log_axis_labels()
 
 
 

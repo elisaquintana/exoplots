@@ -53,13 +53,15 @@ def load_data():
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)
     
-    # get rid of the long name with just TESS
-    dfcon['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
+    # replace the long name with just TESS
+    full = 'Transiting Exoplanet Survey Satellite (TESS)'
+    dfcon['pl_facility'].replace(full, 'TESS', inplace=True)
     # set all of these planets as confirmed
     dfcon['status'] = 'Confirmed'
     
     # get easier to reference names for things in the ExoFOP listing
-    renames = {'TFOPWG Disposition': 'disp', 'TIC ID': 'TIC', 'Period (days)': 'period',
+    renames = {'TFOPWG Disposition': 'disp', 'TIC ID': 'TIC',
+               'Period (days)': 'period',
                'Planet Radius (R_Earth)': 'prade'}
     dftoi.rename(columns=renames, inplace=True)
     
@@ -68,6 +70,7 @@ def load_data():
     # change this to the status we want to report
     dftoi['disp'].replace('PC', 'Candidate', inplace=True)
     
+    # set these to strings we'd want to show in a figure
     dftoi['TOI'] = 'TOI-' + dftoi['TOI'].astype(str)
     dftoi['host'] = 'TIC ' + dftoi['TIC'].astype(str)
       
@@ -75,8 +78,9 @@ def load_data():
     dfkoi['koi_disposition'] = dfkoi['koi_disposition'].str.title()
     dfk2['k2c_disp'] = dfk2['k2c_disp'].str.title()
     
-    # make KOIs into the format we expect
-    dfkoi['kepoi_name'].replace(to_replace='K0+', value='KOI-', regex=True, inplace=True)
+    # make KOI strings into the format we expect
+    dfkoi['kepoi_name'].replace(to_replace='K0+', value='KOI-',
+                                regex=True, inplace=True)
     
     # jupiter/earth radius ratio
     radratio = 11.21
@@ -97,11 +101,62 @@ def load_data():
     dftoi['pl_facility'] = 'TESS'
     
     # where do we want to point people to on clicking?
-    dfcon['url'] = 'https://exoplanetarchive.ipac.caltech.edu/overview/' + dfcon['pl_hostname']
-    dfk2['url'] = 'https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' + dfk2['epic_name'].str.slice(5)
-    dfkoi['url'] = 'https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=' + dfkoi['kepoi_name'].str.slice(0,-3) + '&type=KEPLER_TCE_HOST'
-    dftoi['url'] = 'https://exofop.ipac.caltech.edu/tess/target.php?id=' + dftoi['TIC'].astype(str)
+    dfcon['url'] = ('https://exoplanetarchive.ipac.caltech.edu/overview/' + 
+                    dfcon['pl_hostname'])
+    dfk2['url'] = ('https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' + 
+                   dfk2['epic_name'].str.slice(5))
+    exo = 'https://exoplanetarchive.ipac.caltech.edu/cgi-bin/Display' \
+          'Overview/nph-DisplayOverview?objname='
+    dfkoi['url'] = (exo + dfkoi['kepoi_name'].str.slice(0,-3) +
+                    '&type=KEPLER_TCE_HOST')
+    dftoi['url'] = ('https://exofop.ipac.caltech.edu/tess/target.php?id=' +
+                    dftoi['TIC'].astype(str))
 
     return dfcon, dfkoi, dfk2, dftoi
 
 
+def log_axis_labels(min_tick=-2.001, max_tick=3.):
+    """
+    
+
+    Parameters
+    ----------
+    min_tick : float, optional
+        Maximum small log(10) value that will display in scientific notation
+        instead of the full decimal representation. The default is -3, meaning
+        axis labels will go from 0.001 to 10^-3.
+    max_tick : float, optional
+        Minimum large log(10) value that will display in scientific notation
+        instead of the full decimal representation. The default is 3, meaning
+        axis labels will go from 999 to 10^3.
+
+    Returns
+    -------
+    str: 
+        JavaScript code function that generates the appropriate tick labels.
+
+    """
+    return f"""
+logtick = Math.log10(tick);
+if ((logtick > {min_tick}) && (logtick < {max_tick})){
+    return tick.toLocaleString();
+} else {
+    power = Math.floor(logtick);
+    retval = 10 + (power.toString()
+             .split('')
+             .map(function (d) { return d === '-' ? '⁻' : '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; })
+             .join(''));
+    front = (tick/Math.pow(10, power)).toPrecision(2).toString().slice(0,3);
+    
+    if (front == '1.0'){
+        return retval
+    }
+    else if (front.slice(1,3) == '.0'){
+        return front[0] + 'x' + retval
+    }
+    
+    return front + 'x' + retval
+}
+    """
+    
+    

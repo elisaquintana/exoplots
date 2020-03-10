@@ -9,9 +9,9 @@ on:
 
   # Trigger the workflow on push,
   # but only for the master branch
-  # push:
-  #   branches:
-  #     - master
+  push:
+    branches:
+      - master
   schedule:
     # run this job every day at 1:00 am UTC
     - cron:  '0 1 * * *'
