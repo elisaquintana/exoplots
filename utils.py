@@ -1,5 +1,21 @@
+"""
+Utility functions needed for nearly every figure. Better to put things here
+once and then only change it once if a change is needed rather than 
+copy/paste the same things for a new figure idea and have to track it down in 
+every file it was used to change it.
+"""
+
 
 def get_update_time():
+    """
+    Return a datetime object representing the last time all the data files 
+    were generated.
+
+    Returns
+    -------
+    datetime.datetime
+
+    """
     import datetime
     dateloc = 'data/last_update_time.txt'
     with open(dateloc, 'r') as ff:
@@ -8,6 +24,22 @@ def get_update_time():
 
 
 def load_data():
+    """
+    Load our data tables and perform some data cleansing/updating to make them
+    ready for use in our interactive figures.
+
+    Returns
+    -------
+    dfcon : DataFrame
+        All planets in the Exoplanet Archive confirmed planets table.
+    dfkoi : DataFrame
+        All planets in the Exoplanet Archive KOI planets table.
+    dfk2 : DataFrame
+        All planets in the Exoplanet Archive K2 planet candidates table.
+    dftoi : DataFrame
+        All planets in the ExoFOP-TESS planet candidates table.
+
+    """
     import pandas as pd
     import numpy as np
     # load the data files
@@ -71,3 +103,5 @@ def load_data():
     dftoi['url'] = 'https://exofop.ipac.caltech.edu/tess/target.php?id=' + dftoi['TIC'].astype(str)
 
     return dfcon, dfkoi, dfk2, dftoi
+
+
