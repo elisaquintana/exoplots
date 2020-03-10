@@ -1,4 +1,3 @@
-import pandas as pd
 from bokeh import plotting
 from bokeh.themes import Theme
 from bokeh.io import curdoc
@@ -6,8 +5,7 @@ from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
 from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-import os
-from datetime import datetime
+from utils import load_data, get_update_time
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
@@ -24,64 +22,19 @@ markers = ['circle_cross', 'circle', 'square_cross', 'square', 'inverted_triangl
            'diamond', 'triangle']
 
 
-datafile = 'data/confirmed-planets.csv'
-k2file = 'data/k2-candidates-table.csv'
-koifile = 'data/kepler-kois-full.csv'
-toifile = 'data/tess-candidates.csv'
-
 embedfile = '_includes/period_radius_candidates_embed.html'
 fullfile = '_includes/period_radius_candidates.html'
 
-dfcon = pd.read_csv(datafile)
-dfk2 = pd.read_csv(k2file)
-dfkoi = pd.read_csv(koifile)
-dftoi = pd.read_csv(toifile)
-
-modtimecon = datetime.fromtimestamp(os.path.getmtime(datafile))
-modtimek2 = datetime.fromtimestamp(os.path.getmtime(k2file))
-modtimekoi = datetime.fromtimestamp(os.path.getmtime(koifile))
-modtimetoi = datetime.fromtimestamp(os.path.getmtime(toifile))
-
-# get rid of the long name with just TESS
-dfcon['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
-# set all of these planets as confirmed
-dfcon['status'] = 'Confirmed'
 
 
-# get easier to reference names for things
-renames = {'TFOPWG Disposition': 'disp', 'TIC ID': 'TIC', 'Period (days)': 'period',
-           'Planet Radius (R_Earth)': 'prade'}
-dftoi.rename(columns=renames, inplace=True)
-
-# things that don't have a disposition get PC
-dftoi['disp'].replace(np.nan, 'PC', inplace=True)
-# change this to the status we want to report
-dftoi['disp'].replace('PC', 'Candidate', inplace=True)
-
-dftoi['TOI'] = 'TOI-' + dftoi['TOI'].astype(str)
-dftoi['host'] = 'TIC ' + dftoi['TIC'].astype(str)
 
 
-# make these not all caps
-dfkoi['koi_disposition'] = dfkoi['koi_disposition'].str.title()
-dfk2['k2c_disp'] = dfk2['k2c_disp'].str.title()
-
-# make KOIs into the format we expect
-dfkoi['kepoi_name'].replace(to_replace='K0+', value='KOI-', regex=True, inplace=True)
-
-# jupiter/earth radius ratio
-radratio = 11.21
-# give KOIs/TOIs units of Jupiter radii
-dfkoi['koi_pradj'] = dfkoi['koi_prad'] / radratio
-dftoi['pradj'] = dftoi['prade'] / radratio
+dfcon, dfkoi, dfk2, dftoi = load_data()
 
 
-# K2 tables don't have both columns always filled in
-noearth = (~np.isfinite(dfk2['pl_rade']) & np.isfinite(dfk2['pl_radj']))
-dfk2.loc[noearth, 'pl_rade'] = dfk2.loc[noearth, 'pl_radj'] * radratio
 
-nojup = (np.isfinite(dfk2['pl_rade']) & (~np.isfinite(dfk2['pl_radj'])))
-dfk2.loc[nojup, 'pl_radj'] = dfk2.loc[nojup, 'pl_rade'] / radratio
+
+
 
 
 # run some checks to make sure things are as we think they should be
@@ -94,17 +47,9 @@ k2con = dfk2['k2c_disp'] == 'Confirmed'
 k2can = dfk2['k2c_disp'] == 'Candidate'
 notfound = ~np.in1d(dfk2['pl_name'][k2con], dfcon['pl_name'])
 
-# set the appropriate discover facility for candidates
-dfkoi['pl_facility'] = 'Kepler'
-dfk2['pl_facility'] = 'K2'
-dftoi['pl_facility'] = 'TESS'
 
 
-# where do we want to point people to on clicking?
-dfcon['url'] = 'https://exoplanetarchive.ipac.caltech.edu/overview/' + dfcon['pl_hostname']
-dfk2['url'] = 'https://exofop.ipac.caltech.edu/k2/edit_target.php?id=' + dfk2['epic_name'].str.slice(5)
-dfkoi['url'] = 'https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=' + dfkoi['kepoi_name'].str.slice(0,-3) + '&type=KEPLER_TCE_HOST'
-dftoi['url'] = 'https://exofop.ipac.caltech.edu/tess/target.php?id=' + dftoi['TIC'].astype(str)
+
 
 
 code = """
@@ -212,9 +157,6 @@ for ii, imiss in enumerate(missions):
         print(imiss, ': ', good.sum())
             
     
-    #alpha = 1. - good.sum()/1000.
-    #alpha = max(0.2, alpha)
-    
     if 'Confirmed' in imiss:
         source = plotting.ColumnDataSource(data=dict(
         planet=dfcon['pl_name'][good],
@@ -248,6 +190,9 @@ ydiff = np.log10(ymax) - np.log10(ymin)
 
 ystart = 10.**(np.log10(ymin) - 0.05*ydiff)
 yend = 10.**(np.log10(ymax) + 0.05*ydiff)
+
+# jupiter/earth radius ratio
+radratio = 11.21
 
 fig.extra_y_ranges = {"jup": Range1d(start=ystart/radratio, end=yend/radratio)}
 fig.add_layout(LogAxis(y_range_name="jup"), 'right')
@@ -301,7 +246,7 @@ fig.title.text = 'Transiting Planets and Planet Candidates'
 
 
 
-modtimestr = modtimecon.strftime('%Y %b %d')
+modtimestr = get_update_time().strftime('%Y %b %d')
 
 label_opts1 = dict(
     x=-85, y=42,

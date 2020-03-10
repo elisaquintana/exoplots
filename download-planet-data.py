@@ -1,8 +1,9 @@
 """Downloads candidate and confirmed planet tables from NExSci"""
 import pandas as pd
+from datetime import datetime
 
 NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
-             '-nstedAPI '
+             '-nstedAPI'
 
 # The "exoplanets" table includes all confirmed planets and hosts in the
 # archive with parameters derived from a single, published reference
@@ -28,3 +29,6 @@ print('Downloading full TESS candidates table from ExoFOP...')
 df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort'
                  '=toi&output=csv')
 df.to_csv('data/tess-candidates.csv')
+
+with open('data/last_update_time.txt', 'w') as ff:
+    ff.write(str(datetime.now()))

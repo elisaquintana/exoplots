@@ -1,4 +1,3 @@
-import pandas as pd
 from bokeh import plotting
 from bokeh.themes import Theme
 from bokeh.io import curdoc
@@ -6,8 +5,7 @@ from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
 from bokeh.embed import components
 from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-import os
-from datetime import datetime
+from utils import load_data, get_update_time
 
 theme = Theme(filename="./exoplots_theme.yaml")
 curdoc().theme = theme
@@ -19,18 +17,11 @@ colors = ['#228833', '#ee6677', '#4477aa', '#aa3377', '#ccbb44',
 markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 
 
-datafile = 'data/confirmed-planets.csv'
 
 embedfile = '_includes/period_mass_embed.html'
 fullfile = '_includes/period_mass.html'
 
-df = pd.read_csv(datafile)
-
-
-modtime = datetime.fromtimestamp(os.path.getmtime(datafile))
-
-# get rid of the long name with just TESS
-df['pl_facility'].replace('Transiting Exoplanet Survey Satellite (TESS)', 'TESS', inplace=True)
+dfcon, dfkoi, dfk2, dftoi = load_data()
 
 
 code = """
@@ -84,26 +75,26 @@ legs = []
 
 for ii, imeth in enumerate(methods):
     if imeth == 'Other':
-        good = ((~np.in1d(df['pl_discmethod'], methods)) & (~df['pl_discmethod'].str.contains('Timing')) & 
-                np.isfinite(df['pl_bmasse']) & np.isfinite(df['pl_orbper']))
+        good = ((~np.in1d(dfcon['pl_discmethod'], methods)) & (~dfcon['pl_discmethod'].str.contains('Timing')) & 
+                np.isfinite(dfcon['pl_bmasse']) & np.isfinite(dfcon['pl_orbper']))
         
     elif imeth == 'Timing Variations':
-        good = (df['pl_discmethod'].str.contains('Timing') & 
-                np.isfinite(df['pl_bmasse']) & np.isfinite(df['pl_orbper']))
+        good = (dfcon['pl_discmethod'].str.contains('Timing') & 
+                np.isfinite(dfcon['pl_bmasse']) & np.isfinite(dfcon['pl_orbper']))
     else:
-        good = ((df['pl_discmethod'] == imeth) & np.isfinite(df['pl_bmasse']) & 
-                np.isfinite(df['pl_orbper']))
+        good = ((dfcon['pl_discmethod'] == imeth) & np.isfinite(dfcon['pl_bmasse']) & 
+                np.isfinite(dfcon['pl_orbper']))
     
     alpha = 1. - good.sum()/1000.
     alpha = max(0.2, alpha)
     
     source = plotting.ColumnDataSource(data=dict(
-    planet=df['pl_name'][good],
-    period=df['pl_orbper'][good],
-    host=df['pl_hostname'][good],
-    mass=df['pl_bmasse'][good],
-    method=df['pl_discmethod'][good],
-    jupmass=df['pl_bmassj'][good]
+    planet=dfcon['pl_name'][good],
+    period=dfcon['pl_orbper'][good],
+    host=dfcon['pl_hostname'][good],
+    mass=dfcon['pl_bmasse'][good],
+    method=dfcon['pl_discmethod'][good],
+    jupmass=dfcon['pl_bmassj'][good]
     ))
     print(imeth, ': ', good.sum())
     
@@ -117,7 +108,7 @@ for ii, imeth in enumerate(methods):
     ymin = min(ymin, source.data['mass'].min())
     ymax = max(ymax, source.data['mass'].max())
 
-url = "https://exoplanetarchive.ipac.caltech.edu/overview/@host"
+url = "@url"
 taptool = fig.select(TapTool)
 taptool.callback = OpenURL(url=url)
 
@@ -167,7 +158,8 @@ fig.title.text = 'Confirmed Planets'
 
 
 
-modtimestr = modtime.strftime('%Y %b %d')
+modtimestr = get_update_time().strftime('%Y %b %d')
+
 
 label_opts1 = dict(
     x=-84, y=42,
