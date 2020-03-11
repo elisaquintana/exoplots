@@ -130,17 +130,8 @@ items = [LegendItem(label=ii, renderers=[jj])
 # create the legend
 legend = Legend(items=items, location="center")
 legend.title = 'Discovered via'
-legend.orientation = 'horizontal'
-legend.label_text_font_size = "14pt"
-legend.title_text_font_style = 'bold'
-legend.title_text_font_size = '14pt'
-legend.title_standoff = 0
-legend.margin = 3
-legend.border_line_color = None
 legend.spacing = 17
 fig.add_layout(legend, 'above')
-# allow groups to be turned on and off
-legend.click_policy="hide"
 
 # overall figure title
 fig.title.text = 'Confirmed Planets'

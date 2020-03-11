@@ -209,23 +209,15 @@ for ii in np.arange(2):
     
     if ii == 1:
         legend.title = 'Discovered by and Status'
-        legend.title_text_font_style = 'bold'
-        legend.title_text_font_size = '14pt'
-        legend.title_standoff = 0
         legend.spacing = 10
     else:
         legend.spacing = 11
 
     legend.location = (-60,5)
-    legend.orientation = 'horizontal'
-    legend.label_text_font_size = "14pt"
     legend.label_text_align = 'left'
     legend.margin = 0
-    legend.border_line_color = None
     
     fig.add_layout(legend, 'above')
-    # allow groups to be turned on and off
-    legend.click_policy="hide"
 
 # overall figure title
 fig.title.text = 'Transiting Planets and Planet Candidates'
