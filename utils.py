@@ -142,16 +142,16 @@ def log_axis_labels(min_tick=-2.001, max_tick=3.):
 
     """
     return f"""
-logtick = Math.log10(tick);
+var logtick = Math.log10(tick);
 if ((logtick > {min_tick}) && (logtick < {max_tick})){{
     return tick.toLocaleString();
 }} else {{
-    power = Math.floor(logtick);
-    retval = 10 + (power.toString()
+    var power = Math.floor(logtick);
+    var retval = 10 + (power.toString()
              .split('')
              .map(function (d) {{ return d === '-' ? '⁻' : '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; }})
              .join(''));
-    front = (tick/Math.pow(10, power)).toPrecision(2).toString().slice(0,3);
+    var front = (tick/Math.pow(10, power)).toPrecision(2).toString().slice(0,3);
     
     if (front == '1.0'){{
         return retval
