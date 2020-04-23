@@ -20,8 +20,9 @@ missions = ['Kepler Candidate', 'Kepler Confirmed', 'K2 Candidate',
 markers = ['circle_cross', 'circle', 'square_cross', 'square',
            'inverted_triangle', 'diamond', 'triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
-# other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377', 
+# other ideas:
+# https://thenode.biologists.com/data-visualization-with-flying-colors/research/
+colors = ['#228833', '#228833', '#ee6677', '#ee6677', '#ccbb44', '#aa3377',
           '#ccbb44']
 
 # output files
@@ -34,6 +35,7 @@ plotting.output_file(fullfile, title='Period Radius Plot')
 # load the data
 dfcon, dfkoi, dfk2, dftoi = load_data()
 
+"""
 # run some checks to make sure things are as we think they should be
 koicon = dfkoi['koi_disposition'] == 'Confirmed'
 koican = dfkoi['koi_disposition'] == 'Candidate'
@@ -43,6 +45,7 @@ notfound = ~np.in1d(dfkoi['kepler_name'][koicon], dfcon['pl_name'])
 k2con = dfk2['k2c_disp'] == 'Confirmed'
 k2can = dfk2['k2c_disp'] == 'Candidate'
 notfound = ~np.in1d(dfk2['pl_name'][k2con], dfcon['pl_name'])
+"""
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -72,24 +75,24 @@ for ii, imiss in enumerate(missions):
     # select the appropriate set of planets for each mission
     # make the confirmed planets more opaque and bigger
     if imiss == 'Other Confirmed':
-        good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) & 
-                np.isfinite(dfcon['pl_rade']) & 
+        good = ((~np.in1d(dfcon['pl_facility'], ['Kepler', 'K2', 'TESS'])) &
+                np.isfinite(dfcon['pl_rade']) &
                 np.isfinite(dfcon['pl_orbper']) &
                 dfcon['pl_tranflag'].astype(bool))
         alpha = 0.7
         size = 8
     elif 'Confirmed' in imiss:
         fac = imiss.split()[0]
-        good = ((dfcon['pl_facility'] == fac) & np.isfinite(dfcon['pl_rade']) & 
+        good = ((dfcon['pl_facility'] == fac) & np.isfinite(dfcon['pl_rade']) &
                 np.isfinite(dfcon['pl_orbper']) &
                 dfcon['pl_tranflag'].astype(bool))
         alpha = 0.7
         size = 6
     elif 'Kepler' in imiss:
-        good = ((dfkoi['koi_disposition'] == 'Candidate') & 
-                np.isfinite(dfkoi['koi_period']) & 
+        good = ((dfkoi['koi_disposition'] == 'Candidate') &
+                np.isfinite(dfkoi['koi_period']) &
                 np.isfinite(dfkoi['koi_prad']))
-        # what the hover tooltip draws its values from 
+        # what the hover tooltip draws its values from
         source = plotting.ColumnDataSource(data=dict(
                 planet=dfkoi['kepoi_name'][good],
                 period=dfkoi['koi_period'][good],
@@ -102,11 +105,11 @@ for ii, imiss in enumerate(missions):
                 ))
         print(imiss, ': ', good.sum())
     elif 'K2' in imiss:
-        good = ((dfk2['k2c_disp'] == 'Candidate') & 
-                np.isfinite(dfk2['pl_rade']) & 
-                np.isfinite(dfk2['pl_orbper']) & 
+        good = ((dfk2['k2c_disp'] == 'Candidate') &
+                np.isfinite(dfk2['pl_rade']) &
+                np.isfinite(dfk2['pl_orbper']) &
                 dfk2['k2c_recentflag'].astype(bool))
-        # what the hover tooltip draws its values from 
+        # what the hover tooltip draws its values from
         source = plotting.ColumnDataSource(data=dict(
                 planet=dfk2['epic_candname'][good],
                 period=dfk2['pl_orbper'][good],
@@ -119,9 +122,9 @@ for ii, imiss in enumerate(missions):
                 ))
         print(imiss, ': ', good.sum())
     else:
-        good = ((dftoi['disp'] == 'Candidate') & np.isfinite(dftoi['prade']) & 
+        good = ((dftoi['disp'] == 'Candidate') & np.isfinite(dftoi['prade']) &
                 np.isfinite(dftoi['period']))
-        # what the hover tooltip draws its values from 
+        # what the hover tooltip draws its values from
         source = plotting.ColumnDataSource(data=dict(
                 planet=dftoi['TOI'][good],
                 period=dftoi['period'][good],
@@ -133,9 +136,9 @@ for ii, imiss in enumerate(missions):
                 url=dftoi['url'][good]
                 ))
         print(imiss, ': ', good.sum())
-            
+
     if 'Confirmed' in imiss:
-        # what the hover tooltip draws its values from 
+        # what the hover tooltip draws its values from
         source = plotting.ColumnDataSource(data=dict(
                 planet=dfcon['pl_name'][good],
                 period=dfcon['pl_orbper'][good],
@@ -147,13 +150,13 @@ for ii, imiss in enumerate(missions):
                 url=dfcon['url'][good]
                 ))
         print(imiss, ': ', good.sum())
-    
+
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
     # disappearing when you click on a data point ("select" it)
-    glyph = fig.scatter('period', 'radius', color=colors[ii], source=source, 
+    glyph = fig.scatter('period', 'radius', color=colors[ii], source=source,
                         size=size, alpha=alpha, marker=markers[ii],
-                        nonselection_alpha=alpha, 
+                        nonselection_alpha=alpha,
                         nonselection_color=colors[ii])
     glyphs.append(glyph)
     # save the global min/max
@@ -206,23 +209,21 @@ for ii in np.arange(2):
     else:
         items = items1
     legend = Legend(items=items, location="center")
-    
+
     if ii == 1:
         legend.title = 'Discovered by and Status'
         legend.spacing = 10
     else:
         legend.spacing = 11
 
-    legend.location = (-60,5)
+    legend.location = (-60, 5)
     legend.label_text_align = 'left'
     legend.margin = 0
-    
+
     fig.add_layout(legend, 'above')
 
 # overall figure title
 fig.title.text = 'Transiting Planets and Planet Candidates'
-
-
 
 # create the four lines of credit text in the two bottom corners
 label_opts1 = dict(
