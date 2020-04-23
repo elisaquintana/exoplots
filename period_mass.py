@@ -137,7 +137,7 @@ legend.title = 'Discovered via'
 legend.spacing = 10
 legend.margin = 8
 fig.add_layout(legend, 'above')
-
+ 
 # overall figure title
 fig.title.text = 'Confirmed Planets'
 
