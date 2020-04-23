@@ -17,7 +17,8 @@ methods = ['Transit', 'Radial Velocity', 'Timing Variations', 'Other']
 # markers and colors in the same order as the missions above
 markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
-# other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
+# other ideas:
+# https://thenode.biologists.com/data-visualization-with-flying-colors/research/
 colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
           '#aaaaaa', '#66ccee']
 
@@ -50,6 +51,7 @@ ymin = 1
 ymax = 1
 # save the output plots to rearrange them in the legend
 glyphs = []
+counts = []
 
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
@@ -82,6 +84,7 @@ for ii, imeth in enumerate(methods):
             url=dfcon['url'][good]
             ))
     print(imeth, ': ', good.sum())
+    counts.append(f'{good.sum():,}')
     
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
@@ -125,12 +128,14 @@ fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels())
 fig.right[0].axis_label = 'Mass (Jupiter Masses)'
 
 # set up all the legend objects
-items = [LegendItem(label=ii, renderers=[jj]) 
+items = [LegendItem(label=ii + f' ({counts[methods.index(ii)]})',
+                    renderers=[jj]) 
          for ii, jj in zip(methods, glyphs)]
 # create the legend
 legend = Legend(items=items, location="center")
 legend.title = 'Discovered via'
-legend.spacing = 17
+legend.spacing = 10
+legend.margin = 8
 fig.add_layout(legend, 'above')
 
 # overall figure title

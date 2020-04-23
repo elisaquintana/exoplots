@@ -30,4 +30,3 @@ attrs:
         # off borders on legends
         border_line_color:
         click_policy: "hide"
-        margin: 3

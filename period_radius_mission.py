@@ -17,7 +17,8 @@ missions = ['Kepler', 'K2', 'TESS', 'Other']
 # markers and colors in the same order as the missions above
 markers = ['circle', 'square', 'triangle', 'diamond', 'inverted_triangle']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
-# other ideas: https://thenode.biologists.com/data-visualization-with-flying-colors/research/
+# other ideas:
+# https://thenode.biologists.com/data-visualization-with-flying-colors/research/
 colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
           '#aaaaaa', '#66ccee']
 
@@ -50,25 +51,26 @@ ymin = 1
 ymax = 1
 # save the output plots to rearrange them in the legend
 glyphs = []
+counts = []
 
-for ii, imiss in enumerate(missions):  
+for ii, imiss in enumerate(missions):
     # select the appropriate set of planets for each mission
     if imiss == 'Other':
         good = ((~np.in1d(dfcon['pl_facility'], missions)) &
                 np.isfinite(dfcon['pl_rade']) &
-                np.isfinite(dfcon['pl_orbper']) & 
+                np.isfinite(dfcon['pl_orbper']) &
                 dfcon['pl_tranflag'].astype(bool))
     else:
-        good = ((dfcon['pl_facility'] == imiss) & 
-                np.isfinite(dfcon['pl_rade']) & 
-                np.isfinite(dfcon['pl_orbper']) & 
+        good = ((dfcon['pl_facility'] == imiss) &
+                np.isfinite(dfcon['pl_rade']) &
+                np.isfinite(dfcon['pl_orbper']) &
                 dfcon['pl_tranflag'].astype(bool))
-    
+
     # make the alpha of large groups lower so they don't dominate so much
     alpha = 1. - good.sum()/1000.
     alpha = max(0.2, alpha)
-    
-    # what the hover tooltip draws its values from 
+
+    # what the hover tooltip draws its values from
     source = plotting.ColumnDataSource(data=dict(
             planet=dfcon['pl_name'][good],
             period=dfcon['pl_orbper'][good],
@@ -79,7 +81,8 @@ for ii, imiss in enumerate(missions):
             url=dfcon['url'][good]
             ))
     print(imiss, ': ', good.sum())
-    
+    counts.append(f'{good.sum():,}')
+
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
     # disappearing when you click on a data point ("select" it)
@@ -121,12 +124,13 @@ fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels(max_tick=5))
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'
 
 # set up all the legend objects
-items = [LegendItem(label=ii, renderers=[jj])
+items = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
+                    renderers=[jj])
          for ii, jj in zip(missions, glyphs)]
 # create the legend
 legend = Legend(items=items, location="center")
 legend.title = 'Discovered by'
-legend.spacing = 25
+legend.spacing = 10
 fig.add_layout(legend, 'above')
 
 # overall figure title

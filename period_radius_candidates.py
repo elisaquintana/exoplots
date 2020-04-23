@@ -58,7 +58,8 @@ TOOLTIPS = [
 ]
 
 # create the figure
-fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS)
+fig = plotting.figure(x_axis_type='log', y_axis_type='log', tooltips=TOOLTIPS,
+                      plot_height=700)
 # allow for something to happen when you click on data points
 fig.add_tools(TapTool())
 
@@ -67,6 +68,7 @@ ymin = 1
 ymax = 1
 # save the output plots to rearrange them in the legend
 glyphs = []
+counts = []
 
 for ii, imiss in enumerate(missions):
     # candidates get these default values
@@ -136,6 +138,7 @@ for ii, imiss in enumerate(missions):
                 url=dftoi['url'][good]
                 ))
         print(imiss, ': ', good.sum())
+    counts.append(f'{good.sum():,}')
 
     if 'Confirmed' in imiss:
         # what the hover tooltip draws its values from
@@ -192,25 +195,32 @@ fig.xaxis.formatter = FuncTickFormatter(code=log_axis_labels())
 fig.right[0].axis_label = 'Radius (Jupiter Radii)'
 
 # which order to place the legend labels
-topleg = ['Kepler Confirmed', 'K2 Confirmed', 'TESS Confirmed',
-          'Other Confirmed']
+topleg = ['Kepler Confirmed', 'K2 Confirmed', 'TESS Confirmed']
 bottomleg = ['Kepler Candidate', 'K2 Candidate', 'TESS Candidate']
+vbottomleg = ['Other Confirmed']
 
 # set up all the legend objects
-items1 = [LegendItem(label=ii, renderers=[glyphs[missions.index(ii)]])
+items1 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
+                     renderers=[glyphs[missions.index(ii)]])
           for ii in topleg]
-items2 = [LegendItem(label=ii, renderers=[glyphs[missions.index(ii)]])
+items2 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
+                     renderers=[glyphs[missions.index(ii)]])
           for ii in bottomleg]
+items3 = [LegendItem(label=ii + f' ({counts[missions.index(ii)]})',
+                     renderers=[glyphs[missions.index(ii)]])
+          for ii in vbottomleg]
 
 # create the two legends
-for ii in np.arange(2):
+for ii in np.arange(3):
     if ii == 0:
+        items = items3
+    elif ii == 1:
         items = items2
     else:
         items = items1
     legend = Legend(items=items, location="center")
 
-    if ii == 1:
+    if ii == 2:
         legend.title = 'Discovered by and Status'
         legend.spacing = 10
     else:
