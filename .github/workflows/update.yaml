@@ -44,9 +44,7 @@ jobs:
     # regenerate all the figures
     - name: Update plots
       run: |
-        python period_mass.py
-        python period_radius_mission.py
-        python period_radius_candidates.py
+        update.sh
     # push the changes back to the GitHub repository
     # from https://github.com/marketplace/actions/git-auto-commit
     - uses: stefanzweifel/git-auto-commit-action@v4.1.0
