@@ -1,17 +1,18 @@
-from bokeh import plotting
-from bokeh.themes import Theme
-from bokeh.io import curdoc
-from bokeh.models import OpenURL, TapTool, FuncTickFormatter
-import numpy as np
-from bokeh.embed import components
-from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-from utils import load_data, get_update_time, log_axis_labels
 from datetime import datetime
+
+import numpy as np
+from bokeh import plotting
+from bokeh.embed import components
+from bokeh.io import curdoc
+from bokeh.models import Label
+from bokeh.themes import Theme
+
+from .utils import get_update_time, load_data
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
 # XXX: can't figure out why the theme value overrides anything we set below
-# but only for this
+#   but only for this
 theme._json['attrs']['Legend']['orientation'] = 'vertical'
 curdoc().theme = theme
 
@@ -21,8 +22,8 @@ methods = ['Other', 'Radial Velocity', 'Transit']
 # colorblind friendly palette from https://personal.sron.nl/~pault/
 # other ideas:
 # https://thenode.biologists.com/data-visualization-with-flying-colors/research/
-colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
-          '#aaaaaa', '#66ccee']
+# colors = ['#228833', '#ee6677', '#ccbb44', '#aa3377', '#4477aa',
+#           '#aaaaaa', '#66ccee']
 
 colors = ['#ccbb44', '#ee6677', '#228833']
 
@@ -37,7 +38,7 @@ plotting.output_file(fullfile, title='Planets Per Year')
 dfcon, dfkoi, dfk2, dftoi = load_data()
 
 # create the figure
-fig = plotting.figure(tooltips='@years $name: @$name') # y_axis_type='log'
+fig = plotting.figure(tooltips='@years $name: @$name')  # y_axis_type='log'
 
 years = range(dfcon['pl_disc'].min(), datetime.now().year+1)
 
@@ -50,22 +51,22 @@ for ii, imeth in enumerate(methods):
         good = ~np.in1d(dfcon['pl_discmethod'], methods)
     else:
         good = dfcon['pl_discmethod'] == imeth
-        
+
     ll = []
     for iyear in years:
         ct = (dfcon['pl_disc'][good] == iyear).sum()
-        #if ct == 0:
+        # if ct == 0:
         #    ct = 0.1
         ll.append(ct)
     data[imeth] = ll
     leglab.append(imeth + f' ({good.sum():,})')
-    
+
 fig.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
                legend_label=leglab)
 
 # add the first y-axis's label and use our custom log formatting for both axes
 fig.yaxis.axis_label = 'Number'
-#fig.yaxis.formatter = FuncTickFormatter(code=log_axis_labels())
+# fig.yaxis.formatter = FuncTickFormatter(code=log_axis_labels())
 
 # add the x-axis's label and use our custom log formatting
 fig.xaxis.axis_label = 'Year of Confirmation'
@@ -73,11 +74,11 @@ fig.xaxis.axis_label = 'Year of Confirmation'
 # create the legend
 legend = fig.legend
 legend.location = 'top_left'
-#legend.orientation = "vertical"
+# legend.orientation = "vertical"
 legend.title = 'Discovered via'
-#legend.spacing = 10
-#legend.margin = 8
- 
+# legend.spacing = 10
+# legend.margin = 8
+
 # overall figure title
 fig.title.text = 'Confirmed Planets'
 

@@ -1,11 +1,12 @@
-from bokeh import plotting
-from bokeh.themes import Theme
-from bokeh.io import curdoc
-from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
+from bokeh import plotting
 from bokeh.embed import components
-from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-from utils import load_data, get_update_time, log_axis_labels
+from bokeh.io import curdoc
+from bokeh.models import FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
+from bokeh.themes import Theme
+
+from .utils import get_update_time, load_data, log_axis_labels
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -56,24 +57,24 @@ counts = []
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
     if imeth == 'Other':
-        good = ((~np.in1d(dfcon['pl_discmethod'], methods)) & 
-                (~dfcon['pl_discmethod'].str.contains('Timing')) & 
-                np.isfinite(dfcon['pl_bmasse']) & 
+        good = ((~np.in1d(dfcon['pl_discmethod'], methods)) &
+                (~dfcon['pl_discmethod'].str.contains('Timing')) &
+                np.isfinite(dfcon['pl_bmasse']) &
                 np.isfinite(dfcon['pl_orbper']))
     elif imeth == 'Timing Variations':
-        good = (dfcon['pl_discmethod'].str.contains('Timing') & 
-                np.isfinite(dfcon['pl_bmasse']) & 
+        good = (dfcon['pl_discmethod'].str.contains('Timing') &
+                np.isfinite(dfcon['pl_bmasse']) &
                 np.isfinite(dfcon['pl_orbper']))
     else:
-        good = ((dfcon['pl_discmethod'] == imeth) & 
-                np.isfinite(dfcon['pl_bmasse']) & 
+        good = ((dfcon['pl_discmethod'] == imeth) &
+                np.isfinite(dfcon['pl_bmasse']) &
                 np.isfinite(dfcon['pl_orbper']))
-    
+
     # make the alpha of large groups lower so they don't dominate so much
     alpha = 1. - good.sum()/1000.
     alpha = max(0.2, alpha)
-    
-    # what the hover tooltip draws its values from 
+
+    # what the hover tooltip draws its values from
     source = plotting.ColumnDataSource(data=dict(
             planet=dfcon['pl_name'][good],
             period=dfcon['pl_orbper'][good],
@@ -85,11 +86,11 @@ for ii, imeth in enumerate(methods):
             ))
     print(imeth, ': ', good.sum())
     counts.append(f'{good.sum():,}')
-    
+
     # plot the planets
     # nonselection stuff is needed to prevent planets in that category from
     # disappearing when you click on a data point ("select" it)
-    glyph = fig.scatter('period', 'mass', color=colors[ii], source=source, 
+    glyph = fig.scatter('period', 'mass', color=colors[ii], source=source,
                         size=8, alpha=alpha, marker=markers[ii],
                         nonselection_alpha=alpha,
                         nonselection_color=colors[ii])
@@ -129,7 +130,7 @@ fig.right[0].axis_label = 'Mass (Jupiter Masses)'
 
 # set up all the legend objects
 items = [LegendItem(label=ii + f' ({counts[methods.index(ii)]})',
-                    renderers=[jj]) 
+                    renderers=[jj])
          for ii, jj in zip(methods, glyphs)]
 # create the legend
 legend = Legend(items=items, location="center")
@@ -137,7 +138,7 @@ legend.title = 'Discovered via'
 legend.spacing = 10
 legend.margin = 8
 fig.add_layout(legend, 'above')
- 
+
 # overall figure title
 fig.title.text = 'Confirmed Planets'
 

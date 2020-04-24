@@ -1,11 +1,12 @@
-from bokeh import plotting
-from bokeh.themes import Theme
-from bokeh.io import curdoc
-from bokeh.models import OpenURL, TapTool, FuncTickFormatter
 import numpy as np
+from bokeh import plotting
 from bokeh.embed import components
-from bokeh.models import LogAxis,  Range1d, Label, Legend, LegendItem
-from utils import load_data, get_update_time, log_axis_labels
+from bokeh.io import curdoc
+from bokeh.models import FuncTickFormatter, OpenURL, TapTool
+from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
+from bokeh.themes import Theme
+
+from .utils import get_update_time, load_data, log_axis_labels
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
