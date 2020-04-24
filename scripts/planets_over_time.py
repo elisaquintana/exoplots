@@ -7,7 +7,7 @@ from bokeh.io import curdoc
 from bokeh.models import Label
 from bokeh.themes import Theme
 
-from .utils import get_update_time, load_data
+from utils import get_update_time, load_data
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")

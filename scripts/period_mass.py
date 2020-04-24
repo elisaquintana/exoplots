@@ -6,7 +6,7 @@ from bokeh.models import FuncTickFormatter, OpenURL, TapTool
 from bokeh.models import Label, Legend, LegendItem, LogAxis, Range1d
 from bokeh.themes import Theme
 
-from .utils import get_update_time, load_data, log_axis_labels
+from utils import get_update_time, load_data, log_axis_labels
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
