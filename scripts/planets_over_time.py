@@ -213,7 +213,7 @@ for xx in np.arange(2):
     # add the x-axis's label and use our custom log formatting
     fig2.xaxis.axis_label = 'Year of Confirmation'
     
-    # create the legend
+    # create the legend 
     legend = fig2.legend
     legend.location = 'top_left'
     # legend.orientation = "vertical"
