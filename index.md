@@ -37,3 +37,23 @@ If the tap tool is on, clicking on a particular planet will open its appropriate
 details page on either Exoplanet Archive or ExoFOP-TESS. Clicking on the
 labels in the legend allows you to turn on and off individual collections of
 planets.
+
+
+
+
+## Confirmed Planets Discovered Per Year
+
+{% include per_year_embed.html %}
+
+{% include per_year_log_embed.html %}
+
+Description
+
+
+## Cumulative Confirmed Planets Discovered Over Time
+
+{% include per_year_cumul_embed.html %}
+
+{% include per_year_cumul_log_embed.html %}
+
+Description
