@@ -36,7 +36,7 @@ plotting.output_file(fullfile, title='Period Radius Plot')
 # load the data
 dfcon, dfkoi, dfk2, dftoi = load_data()
 
-"""
+
 # run some checks to make sure things are as we think they should be
 koicon = dfkoi['koi_disposition'] == 'Confirmed'
 koican = dfkoi['koi_disposition'] == 'Candidate'
@@ -46,7 +46,7 @@ notfound = ~np.in1d(dfkoi['kepler_name'][koicon], dfcon['pl_name'])
 k2con = dfk2['k2c_disp'] == 'Confirmed'
 k2can = dfk2['k2c_disp'] == 'Candidate'
 notfound = ~np.in1d(dfk2['pl_name'][k2con], dfcon['pl_name'])
-"""
+
 
 # what to display when hovering over a data point
 TOOLTIPS = [
@@ -227,7 +227,7 @@ for ii in np.arange(3):
     else:
         legend.spacing = 11
 
-    legend.location = (-60, 5)
+    legend.location = (-70, 5)
     legend.label_text_align = 'left'
     legend.margin = 0
 
