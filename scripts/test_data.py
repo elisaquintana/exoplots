@@ -103,19 +103,14 @@ for index, icon in dftoi[toicon].iterrows():
     res = np.where((np.abs(dfcon['ra'] - icon['RA']) < 1./60)  &
              (np.abs(dfcon['dec'] - icon['Dec']) < 1./60) & 
              (np.abs(dfcon['pl_orbper'] - icon['period']) < 1./60))[0]
-    if len(res) != 1:
-        print(icon['TOI'], len(res))
-        # special cases I know about that we can ignore
-        # assert icon['TOI'] in excluded
-print('break')
+    assert len(res) != 1
+
 # make sure all candidate TOIs aren't in the confirmed table
 for index, ican in dftoi[toican].iterrows():
     res = np.where((np.abs(dfcon['ra'] - ican['RA']) < 1./60)  &
              (np.abs(dfcon['dec'] - ican['Dec']) < 1./60) & 
              (np.abs(dfcon['pl_orbper'] - ican['period']) < 1./60))[0]
-    #assert len(res) == 0
-    if len(res) != 0:
-        print(ican['TOI'], dfcon['pl_name'][res])
+    assert len(res) == 0
 
 
 

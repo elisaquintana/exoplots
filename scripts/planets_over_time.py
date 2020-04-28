@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 from bokeh import plotting
@@ -7,6 +7,7 @@ from bokeh.io import curdoc
 from bokeh.models import Label
 from bokeh.themes import Theme
 from bokeh.models import FuncTickFormatter, NumeralTickFormatter
+from bokeh.models.tools import HoverTool
 
 from utils import get_update_time, load_data, log_axis_labels
 
@@ -87,17 +88,46 @@ cumtots = np.array(cumtots).sum(axis=0)
 data['total'] = tots
 cumul['total'] = cumtots
 
+# get the exponential growth bit
+cyear = get_update_time().year
+fullyear = datetime(cyear + 1, 1, 1) - datetime(cyear, 1, 1)
+# extrapolate this year's total through the full year
+upscale = fullyear / (get_update_time() - datetime(cyear, 1, 1))
+scaled = cumtots * 1
+scaled[-1] = scaled[-2] + upscale * (scaled[-1] - scaled[-2])
+# use a weighted exponential growth fit
+# see https://mathworld.wolfram.com/LeastSquaresFittingExponential.html
+exp = np.polyfit(np.arange(scaled.size), np.log(scaled), 1, w=np.log(scaled))
+
+preds = np.exp(np.polyval(exp, np.arange(scaled.size)))
+
+tdouble = np.log(2) / exp[0]
+
+cumul['Predicted'] = preds
+
+
 # make the per year and then cumulative plots
 for xx in np.arange(2):
-    fancytool = """
-        <div>
-            <span style="font-size: 12px; float:right;">@$name{0,0}</span>
-            <span style="font-size: 12px; color: #5caddd; float:right;">@years $name:</span>          
-        </div>
-        <div>
-            <span style="font-size: 12px; float:right;">@total{0,0}</span>
-            <span style="font-size: 12px; color: #5caddd; float:right;">@years Total:</span> 
-        </div>"""
+    if xx == 0:
+        fancytool = """
+            <div>
+                <span style="font-size: 12px; float:right;">@$name{0,0}</span>
+                <span style="font-size: 12px; color: #5caddd; float:right;">@years $name:</span>          
+            </div>
+            <div>
+                <span style="font-size: 12px; float:right;">@total{0,0}</span>
+                <span style="font-size: 12px; color: #5caddd; float:right;">@years Total:</span> 
+            </div>"""
+    else:
+        fancytool = """
+            <div>
+                <span style="font-size: 12px; float:right;">@$name{0,0}</span>
+                <span style="font-size: 12px; color: #5caddd; float:right;">Through @years $name:</span>          
+            </div>
+            <div>
+                <span style="font-size: 12px; float:right;">@total{0,0}</span>
+                <span style="font-size: 12px; color: #5caddd; float:right;">Through @years Total:</span> 
+            </div>"""
     # set up the full output file and create the figure
     if xx == 0:
         plotting.output_file(fullfile, title='Planets Per Year')
@@ -110,9 +140,12 @@ for xx in np.arange(2):
         plotting.output_file(fullfilecum, title='Cumulative Planets')
         fig = plotting.figure(tooltips=fancytool,
                           y_range=(0, cumtots.max()*1.05))
+        # plot the exponential growth
+        fig.line('years', 'Predicted', source=cumul, line_width=5, line_color='black',
+                 legend_label=f'Doubling Time: {tdouble:.2f} years', name='Predicted')
         fig.vbar_stack(methods, x='years', width=0.9, color=colors, source=cumul,
                    legend_label=leglab, line_width=0)
-    
+
     # add the first y-axis's label and use our custom log formatting for both axes
     fig.yaxis.axis_label = 'Number'
     fig.yaxis.formatter = NumeralTickFormatter(format='0,0')
@@ -128,12 +161,12 @@ for xx in np.arange(2):
     # legend.spacing = 10
     # legend.margin = 8
     legend[0].items = legend[0].items[::-1]
-    
+        
     # overall figure title
     if xx == 0:
-        fig.title.text = 'Confirmed Planets Per Year'
+        fig.title.text = f'Confirmed Planets Per Year ({cumtots[-1]:,})'
     else:
-        fig.title.text = 'Cumulative Confirmed Planets'
+        fig.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
     
     # create the three lines of credit text in the two bottom corners
     label_opts1 = dict(
@@ -199,10 +232,13 @@ for xx in np.arange(2):
         fig2.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
                     legend_label=leglab, line_width=0)
     else:
-        ymax = 10.**(np.log10(cumtots.max()) + 0.05*(np.log10(cumtots.max()) - np.log10(ymin)))
+        ymax = 10.**(np.log10(cumtots.max()) + 0.065*(np.log10(cumtots.max()) - np.log10(ymin)))
         plotting.output_file(fullfilecumlog, title='Planets Per Year Log')
         fig2 = plotting.figure(tooltips=fancytool,
                           y_range=(ymin, ymax), y_axis_type='log')
+        # plot the exponential growth
+        fig2.line('years', 'Predicted', source=cumul, line_width=5, line_color='black',
+                  legend_label=f'Doubling Time: {tdouble:.2f} years', name='Predicted')
         fig2.vbar_stack(methods, x='years', width=0.9, color=colors, source=cumul,
                     legend_label=leglab, line_width=0)
     
@@ -223,11 +259,11 @@ for xx in np.arange(2):
     
     # overall figure title
     if xx == 0:
-        fig2.title.text = 'Confirmed Planets Per Year'
+        fig2.title.text = f'Confirmed Planets Per Year ({cumtots[-1]:,})'
     else:
-        fig2.title.text = 'Cumulative Confirmed Planets'
+        fig2.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
 
-    legend[0].items.pop(0)
+    legend[0].items.pop(1)
     legend[0].items = legend[0].items[::-1]
     
     # create the three lines of credit text in the two bottom corners
@@ -279,9 +315,43 @@ for xx in np.arange(2):
 
 
 
+cyear = get_update_time().year
+fullyear = datetime(cyear + 1, 1, 1) - datetime(cyear, 1, 1)
+upscale = fullyear / (get_update_time() - datetime(cyear, 1, 1))
+
+scaled = cumtots * 1
+scaled[-1] = scaled[-2] + upscale * (scaled[-1] - scaled[-2])
+
+
+import matplotlib.pyplot as plt
+
+
+plt.close('all')
+exp1 = np.polyfit(np.arange(scaled.size), np.log(scaled), 1)
+exp2 = np.polyfit(np.arange(scaled.size), np.log(scaled), 1, w=scaled)
+exp3 = np.polyfit(np.arange(scaled.size), np.log(scaled), 1, w=np.log(scaled))
 
 
 
+plt.figure()
+plt.scatter(np.arange(scaled.size), scaled)
+
+plt.plot(np.exp(np.polyval(exp1, np.arange(scaled.size))), label='x1')
+plt.plot(np.exp(np.polyval(exp2, np.arange(scaled.size))), label='x2')
+plt.plot(np.exp(np.polyval(exp3, np.arange(scaled.size))), label='x3')
+
+plt.legend()
+
+
+
+plt.figure()
+plt.scatter(np.arange(scaled.size), np.log(scaled))
+
+plt.plot(np.polyval(exp1, np.arange(scaled.size)), label='x1')
+plt.plot(np.polyval(exp2, np.arange(scaled.size)), label='x2')
+plt.plot(np.polyval(exp3, np.arange(scaled.size)), label='x3')
+
+plt.legend()
 
 
 
