@@ -139,6 +139,7 @@ for ii, imiss in enumerate(missions):
                 url=dftoi['url'][good]
                 ))
         print(imiss, ': ', good.sum())
+        alpha = 0.6
     counts.append(f'{good.sum():,}')
 
     if 'Confirmed' in imiss:
