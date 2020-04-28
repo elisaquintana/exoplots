@@ -49,7 +49,8 @@ def load_data():
     koifile = 'data/kepler-kois-full.csv'
     toifile = 'data/tess-candidates.csv'
     
-    dfcon = pd.read_csv(datafile)
+    # the dtype is to silence a pandas warning
+    dfcon = pd.read_csv(datafile, dtype={'pl_edelink': 'string'})
     dfk2 = pd.read_csv(k2file)
     dfkoi = pd.read_csv(koifile)
     dftoi = pd.read_csv(toifile)
