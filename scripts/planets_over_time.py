@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 from bokeh import plotting
@@ -7,7 +7,6 @@ from bokeh.io import curdoc
 from bokeh.models import Label
 from bokeh.themes import Theme
 from bokeh.models import FuncTickFormatter, NumeralTickFormatter
-from bokeh.models.tools import HoverTool
 
 from utils import get_update_time, load_data, log_axis_labels
 
@@ -90,6 +89,7 @@ cumul['total'] = cumtots
 
 # get the exponential growth bit
 cyear = get_update_time().year
+# how many days is this year
 fullyear = datetime(cyear + 1, 1, 1) - datetime(cyear, 1, 1)
 # extrapolate this year's total through the full year
 upscale = fullyear / (get_update_time() - datetime(cyear, 1, 1))
@@ -314,47 +314,6 @@ for xx in np.arange(2):
             ff.write(script)    
 
 
-
-
-
-
-cyear = get_update_time().year
-fullyear = datetime(cyear + 1, 1, 1) - datetime(cyear, 1, 1)
-upscale = fullyear / (get_update_time() - datetime(cyear, 1, 1))
-
-scaled = cumtots * 1
-scaled[-1] = scaled[-2] + upscale * (scaled[-1] - scaled[-2])
-
-
-import matplotlib.pyplot as plt
-
-
-plt.close('all')
-exp1 = np.polyfit(np.arange(scaled.size), np.log(scaled), 1)
-exp2 = np.polyfit(np.arange(scaled.size), np.log(scaled), 1, w=scaled)
-exp3 = np.polyfit(np.arange(scaled.size), np.log(scaled), 1, w=np.log(scaled))
-
-
-
-plt.figure()
-plt.scatter(np.arange(scaled.size), scaled)
-
-plt.plot(np.exp(np.polyval(exp1, np.arange(scaled.size))), label='x1')
-plt.plot(np.exp(np.polyval(exp2, np.arange(scaled.size))), label='x2')
-plt.plot(np.exp(np.polyval(exp3, np.arange(scaled.size))), label='x3')
-
-plt.legend()
-
-
-
-plt.figure()
-plt.scatter(np.arange(scaled.size), np.log(scaled))
-
-plt.plot(np.polyval(exp1, np.arange(scaled.size)), label='x1')
-plt.plot(np.polyval(exp2, np.arange(scaled.size)), label='x2')
-plt.plot(np.polyval(exp3, np.arange(scaled.size)), label='x3')
-
-plt.legend()
 
 
 
