@@ -263,7 +263,10 @@ for xx in np.arange(2):
     else:
         fig2.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
 
-    legend[0].items.pop(1)
+    if xx == 1:
+        legend[0].items.pop(1)
+    else:
+        legend[0].items.pop(0)
     legend[0].items = legend[0].items[::-1]
     
     # create the three lines of credit text in the two bottom corners
