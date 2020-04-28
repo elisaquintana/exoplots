@@ -42,6 +42,7 @@ def load_data():
     """
     import pandas as pd
     import numpy as np
+    from astropy.coordinates import Angle
     # load the data files
     datafile = 'data/confirmed-planets.csv'
     k2file = 'data/k2-candidates-table.csv'
@@ -69,6 +70,11 @@ def load_data():
     dftoi['disp'].replace(np.nan, 'PC', inplace=True)
     # change this to the status we want to report
     dftoi['disp'].replace('PC', 'Candidate', inplace=True)
+    dftoi['disp'].replace('KP', 'Confirmed', inplace=True)
+    dftoi['disp'].replace('CP', 'Confirmed', inplace=True)
+    
+    dftoi['RA'] = Angle(dftoi['RA'], unit='hourangle').degree
+    dftoi['Dec'] = Angle(dftoi['Dec'], unit='degree').degree
     
     # set these to strings we'd want to show in a figure
     dftoi['TOI'] = 'TOI-' + dftoi['TOI'].astype(str)
@@ -111,6 +117,33 @@ def load_data():
                     '&type=KEPLER_TCE_HOST')
     dftoi['url'] = ('https://exofop.ipac.caltech.edu/tess/target.php?id=' +
                     dftoi['TIC'].astype(str))
+    
+    # KOI-1101.02 is a known duplicate of 1101.01. Remove it.
+    dfkoi.drop(dfkoi[dfkoi['kepoi_name'] == 'KOI-1101.02'].index, inplace=True)
+
+    # the TOI list from ExoFOP isn't always kept synced with the confirmed
+    # planets table, so do some shifting of categories here.
+    # match planets between tables by RA/Dec/Period
+    
+    toicon = dftoi['disp'] == 'Confirmed'
+    toican = dftoi['disp'] == 'Candidate'
+    
+    # any supposedly confirmed TOIs that aren't in the table get demoted back
+    # to candidate
+    for index, icon in dftoi[toicon].iterrows():
+        res = np.where((np.abs(dfcon['ra'] - icon['RA']) < 1./60)  &
+                 (np.abs(dfcon['dec'] - icon['Dec']) < 1./60) & 
+                 (np.abs(dfcon['pl_orbper'] - icon['period']) < 1./60))[0]
+        if len(res) == 0:
+            dftoi.at[index, 'disp'] = 'Candidate'
+
+    # any candidates in the confirmed table get set as such
+    for index, ican in dftoi[toican].iterrows():
+        res = np.where((np.abs(dfcon['ra'] - ican['RA']) < 1./60)  &
+                 (np.abs(dfcon['dec'] - ican['Dec']) < 1./60) & 
+                 (np.abs(dfcon['pl_orbper'] - ican['period']) < 1./60))[0]
+        if len(res) == 1:
+            dftoi.at[index, 'disp'] = 'Confirmed'
 
     return dfcon, dfkoi, dfk2, dftoi
 
