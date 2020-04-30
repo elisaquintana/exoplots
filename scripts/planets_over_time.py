@@ -8,7 +8,8 @@ from bokeh.models import Label
 from bokeh.themes import Theme
 from bokeh.models import FuncTickFormatter, NumeralTickFormatter
 
-from utils import get_update_time, load_data, log_axis_labels
+from utils import get_update_time, log_axis_labels
+from test_data import get_discovery_year
 
 # get the exoplot theme
 theme = Theme(filename="./exoplots_theme.yaml")
@@ -29,28 +30,34 @@ methods = ['Other', 'Radial Velocity', 'Transit']
 colors = ['#ccbb44', '#ee6677', '#228833']
 
 # output files
-embedfile = '_includes/per_year_embed.html'
-fullfile = '_includes/per_year.html'
+embedfile_name = '_includes/per_year_{0}_embed.html'
+fullfile_name = '_includes/per_year_{0}.html'
 
-embedfilelog = '_includes/per_year_log_embed.html'
-fullfilelog = '_includes/per_year_log.html'
+embedfilelog_name = '_includes/per_year_{0}_log_embed.html'
+fullfilelog_name = '_includes/per_year_{0}_log.html'
 
-embedfilecum = '_includes/per_year_cumul_embed.html'
-fullfilecum = '_includes/per_year_cumul.html'
+embedfilecum_name = '_includes/per_year_{0}_cumul_embed.html'
+fullfilecum_name = '_includes/per_year_{0}_cumul.html'
 
-embedfilecumlog = '_includes/per_year_cumul_log_embed.html'
-fullfilecumlog = '_includes/per_year_cumul_log.html'
+embedfilecumlog_name = '_includes/per_year_{0}_cumul_log_embed.html'
+fullfilecumlog_name = '_includes/per_year_{0}_cumul_log.html'
 
 # load the data
-dfcon, dfkoi, dfk2, dftoi = load_data()
+dfcon, dfkoi, dfk2, dftoi = get_discovery_year()
 
 years = range(dfcon['pl_disc'].min(), datetime.now().year+1)
 
-data = {'years': years}
-cumul = {'years': years}
-leglab = []
-tots = []
-cumtots = []
+condata = {'years': years}
+concumul = {'years': years}
+conleglab = []
+contots = []
+concumtots = []
+
+pcdata = {'years': years}
+pccumul = {'years': years}
+pcleglab = []
+pctots = []
+pccumtots = []
 
 for ii, imeth in enumerate(methods):
     # select the appropriate set of planets for each mission
@@ -58,34 +65,67 @@ for ii, imeth in enumerate(methods):
         good = ~np.in1d(dfcon['pl_discmethod'], methods)
     else:
         good = dfcon['pl_discmethod'] == imeth
+    ntot = good.sum()
 
-    ll = []
     base = []
-    isum = [0]
+    conll = []    
+    conisum = [0]
+    pcll = []
+    pcisum = [0]
     for iyear in years:
         ct = (dfcon['pl_disc'][good] == iyear).sum()
-        # if ct == 0:
-        #    ct = 0.1
-        ll.append(ct)
-        isum.append(isum[-1] + ct)
+        conll.append(ct)
+        conisum.append(conisum[-1] + ct)
         base.append(0.01)
-    isum.pop(0)
+        
+        pcct = (dfcon['year_disc'][good] == iyear).sum()
+        if imeth == 'Transit':
+            toican = dftoi['disp'] == 'Candidate'
+            pcct += (dftoi['year_disc'][toican] == iyear).sum()
+            
+            k2can = (dfk2['k2c_disp'] == 'Candidate') & dfk2['k2c_recentflag'].astype(bool)
+            pcct += (dfk2['year_disc'][k2can] == iyear).sum()
+            
+            # XXX: add kois
+        
+        pcll.append(pcct)
+        pcisum.append(pcisum[-1] + pcct)
     
-    cumtots.append(isum)
-    tots.append(ll)
-    data[imeth] = ll
-    cumul[imeth] = isum
+    if imeth == 'Transit':
+        # XXX: add kois
+        ntot += toican.sum() + k2can.sum()
+    
+    conisum.pop(0)
+    pcisum.pop(0)
+    
+    concumtots.append(conisum)
+    contots.append(conll)
+    condata[imeth] = conll
+    concumul[imeth] = conisum
     if ii == 0:
-        data['base'] = base
-        cumul['base'] = base
-    leglab.append(imeth + f' ({good.sum():,})')
+        condata['base'] = base
+        concumul['base'] = base
+    conleglab.append(imeth + f' ({good.sum():,})')
+    
+    pccumtots.append(pcisum)
+    pctots.append(pcll)
+    pcdata[imeth] = pcll
+    pccumul[imeth] = pcisum
+    if ii == 0:
+        pcdata['base'] = base
+        pccumul['base'] = base
+    pcleglab.append(imeth + f' ({ntot:,})')
 
 
-tots = np.array(tots).sum(axis=0)
-cumtots = np.array(cumtots).sum(axis=0)
+contots = np.array(contots).sum(axis=0)
+concumtots = np.array(concumtots).sum(axis=0)
+condata['total'] = contots
+concumul['total'] = concumtots
 
-data['total'] = tots
-cumul['total'] = cumtots
+pctots = np.array(pctots).sum(axis=0)
+pccumtots = np.array(pccumtots).sum(axis=0)
+pcdata['total'] = pctots
+pccumul['total'] = pccumtots
 
 # get the exponential growth bit
 cyear = get_update_time().year
@@ -93,52 +133,83 @@ cyear = get_update_time().year
 fullyear = datetime(cyear + 1, 1, 1) - datetime(cyear, 1, 1)
 # extrapolate this year's total through the full year
 upscale = fullyear / (get_update_time() - datetime(cyear, 1, 1))
-scaled = cumtots * 1
-scaled[-1] = scaled[-2] + upscale * (scaled[-1] - scaled[-2])
+conscaled = concumtots * 1
+conscaled[-1] = conscaled[-2] + upscale * (conscaled[-1] - conscaled[-2])
+pcscaled = pccumtots * 1
+pcscaled[-1] = pcscaled[-2] + upscale * (pcscaled[-1] - pcscaled[-2])
 # use a weighted exponential growth fit
 # see https://mathworld.wolfram.com/LeastSquaresFittingExponential.html
-exp = np.polyfit(np.arange(scaled.size), np.log(scaled), 1, w=np.log(scaled))
+conexp = np.polyfit(np.arange(conscaled.size), np.log(conscaled), 1, w=np.log(conscaled))
+conpreds = np.exp(np.polyval(conexp, np.arange(conscaled.size)))
+contdouble = np.log(2) / conexp[0]
+concumul['Predicted'] = conpreds
 
-preds = np.exp(np.polyval(exp, np.arange(scaled.size)))
+pcexp = np.polyfit(np.arange(pcscaled.size), np.log(pcscaled), 1, w=np.log(pcscaled))
+pcpreds = np.exp(np.polyval(pcexp, np.arange(pcscaled.size)))
+pctdouble = np.log(2) / pcexp[0]
+pccumul['Predicted'] = pcpreds
 
-tdouble = np.log(2) / exp[0]
+fancytool0 = """
+    <div>
+        <span style="font-size: 12px; float:right;">@$name{0,0}</span>
+        <span style="font-size: 12px; color: #5caddd; float:right;">@years $name:</span>          
+    </div>
+    <div>
+        <span style="font-size: 12px; float:right;">@total{0,0}</span>
+        <span style="font-size: 12px; color: #5caddd; float:right;">@years Total:</span> 
+    </div>"""
 
-cumul['Predicted'] = preds
-
+fancytool1 = """
+    <div>
+        <span style="font-size: 12px; float:right;">@$name{0,0}</span>
+        <span style="font-size: 12px; color: #5caddd; float:right;">$name through @years:</span>          
+    </div>
+    <div>
+        <span style="font-size: 12px; float:right;">@total{0,0}</span>
+        <span style="font-size: 12px; color: #5caddd; float:right;">Total through @years:</span> 
+    </div>"""
 
 # make the per year and then cumulative plots
-for xx in np.arange(2):
-    if xx == 0:
-        fancytool = """
-            <div>
-                <span style="font-size: 12px; float:right;">@$name{0,0}</span>
-                <span style="font-size: 12px; color: #5caddd; float:right;">@years $name:</span>          
-            </div>
-            <div>
-                <span style="font-size: 12px; float:right;">@total{0,0}</span>
-                <span style="font-size: 12px; color: #5caddd; float:right;">@years Total:</span> 
-            </div>"""
-    else:
-        fancytool = """
-            <div>
-                <span style="font-size: 12px; float:right;">@$name{0,0}</span>
-                <span style="font-size: 12px; color: #5caddd; float:right;">Through @years $name:</span>          
-            </div>
-            <div>
-                <span style="font-size: 12px; float:right;">@total{0,0}</span>
-                <span style="font-size: 12px; color: #5caddd; float:right;">Through @years Total:</span> 
-            </div>"""
+for xx in np.arange(4):
     # set up the full output file and create the figure
-    if xx == 0:
-        plotting.output_file(fullfile, title='Planets Per Year')
+    if (xx%2) == 0:
+        if xx == 0:
+            txt = 'confirmed'
+            tots = contots
+            data = condata
+            leglab = conleglab
+            cumtots = concumtots
+        else:
+            txt = 'candidate'
+            tots = pctots
+            data = pcdata
+            leglab = pcleglab
+            cumtots = pccumtots
+        plotting.output_file(fullfile_name.format(txt), title='Planets Per Year')
         # '@years $name: @$name; Total: @total'
-        fig = plotting.figure(tooltips=fancytool,
+        fig = plotting.figure(tooltips=fancytool0,
                           y_range=(0, tots.max()*1.05))
         fig.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
                    legend_label=leglab, line_width=0)
     else:
-        plotting.output_file(fullfilecum, title='Cumulative Planets')
-        fig = plotting.figure(tooltips=fancytool,
+        if xx == 1:
+            txt = 'confirmed'
+            tots = contots
+            data = condata
+            leglab = conleglab
+            cumtots = concumtots
+            cumul = concumul
+            tdouble = contdouble
+        else:
+            txt = 'candidate'
+            tots = pctots
+            data = pcdata
+            leglab = pcleglab
+            cumtots = pccumtots
+            cumul = pccumul
+            tdouble = pctdouble
+        plotting.output_file(fullfilecum_name.format(txt), title='Cumulative Planets')
+        fig = plotting.figure(tooltips=fancytool1,
                           y_range=(0, cumtots.max()*1.05))
         # plot the exponential growth
         fig.line('years', 'Predicted', source=cumul, line_width=5, line_color='black',
@@ -151,7 +222,10 @@ for xx in np.arange(2):
     fig.yaxis.formatter = NumeralTickFormatter(format='0,0')
     
     # add the x-axis's label and use our custom log formatting
-    fig.xaxis.axis_label = 'Year of Confirmation'
+    if xx < 2:
+        fig.xaxis.axis_label = 'Year of Confirmation'
+    else:
+        fig.xaxis.axis_label = 'Year of Discovery'
     
     # create the legend
     legend = fig.legend
@@ -165,8 +239,14 @@ for xx in np.arange(2):
     # overall figure title
     if xx == 0:
         fig.title.text = f'Confirmed Planets Per Year ({cumtots[-1]:,})'
-    else:
+    elif xx == 1:
         fig.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
+    elif xx == 2:
+        fig.title.text = f'Confirmed + Candidate Planets Per Year ({cumtots[-1]:,})'
+    else:
+        fig.title.text = f'Cumulative Confirmed + Candidate Planets ({cumtots[-1]:,})'
+        fig.title.align = 'right'
+    fig.title.text_font_size = '20pt'
     
     # create the three lines of credit text in the two bottom corners
     label_opts1 = dict(
@@ -204,37 +284,66 @@ for xx in np.arange(2):
     # html page
     script, div = components(fig)
     if xx == 0:
-        with open(embedfile, 'w') as ff:
+        with open(embedfile_name.format(txt), 'w') as ff:
             ff.write(div)
             ff.write(script)
     else:
-        with open(embedfilecum, 'w') as ff:
+        with open(embedfilecum_name.format(txt), 'w') as ff:
             ff.write(div)
             ff.write(script)
     
-    
+    plotting.show(fig)
     
 # now do the same thing but on log scale
 
 methods.insert(0,'base')
 colors.insert(0, '#000000')
-leglab.insert(0,'')
+conleglab.insert(0,'')
+pcleglab.insert(0,'')
 
 # make the per year and then cumulative plots
-for xx in np.arange(2):
+for xx in np.arange(4):
     ymin = 0.8
     # set up the full output file and create the figure
-    if xx == 0:
+    if (xx%2) == 0:
+        if xx == 0:
+            txt = 'confirmed'
+            tots = contots
+            data = condata
+            leglab = conleglab
+            cumtots = concumtots
+        else:
+            txt = 'candidate'
+            tots = pctots
+            data = pcdata
+            leglab = pcleglab
+            cumtots = pccumtots
         ymax = 10.**(np.log10(tots.max()) + 0.05*(np.log10(tots.max()) - np.log10(ymin)))
-        plotting.output_file(fullfilelog, title='Planets Per Year Log')
-        fig2 = plotting.figure(tooltips=fancytool,
+        plotting.output_file(fullfilelog_name.format(txt), title='Planets Per Year Log')
+        fig2 = plotting.figure(tooltips=fancytool0,
                           y_range=(ymin, ymax), y_axis_type='log')
         fig2.vbar_stack(methods, x='years', width=0.9, color=colors, source=data,
                     legend_label=leglab, line_width=0)
     else:
+        if xx == 1:
+            txt = 'confirmed'
+            tots = contots
+            data = condata
+            leglab = conleglab
+            cumtots = concumtots
+            cumul = concumul
+            tdouble = contdouble
+        else:
+            txt = 'candidate'
+            tots = pctots
+            data = pcdata
+            leglab = pcleglab
+            cumtots = pccumtots
+            cumul = pccumul
+            tdouble = pctdouble
         ymax = 10.**(np.log10(cumtots.max()) + 0.065*(np.log10(cumtots.max()) - np.log10(ymin)))
-        plotting.output_file(fullfilecumlog, title='Planets Per Year Log')
-        fig2 = plotting.figure(tooltips=fancytool,
+        plotting.output_file(fullfilecumlog_name.format(txt), title='Planets Per Year Log')
+        fig2 = plotting.figure(tooltips=fancytool1,
                           y_range=(ymin, ymax), y_axis_type='log')
         # plot the exponential growth
         fig2.line('years', 'Predicted', source=cumul, line_width=5, line_color='black',
@@ -247,7 +356,10 @@ for xx in np.arange(2):
     fig2.yaxis.formatter = FuncTickFormatter(code=log_axis_labels(max_tick=4))
     
     # add the x-axis's label and use our custom log formatting
-    fig2.xaxis.axis_label = 'Year of Confirmation'
+    if xx < 2:
+        fig2.xaxis.axis_label = 'Year of Confirmation'
+    else:
+        fig2.xaxis.axis_label = 'Year of Discovery'
     
     # create the legend 
     legend = fig2.legend
@@ -260,10 +372,16 @@ for xx in np.arange(2):
     # overall figure title
     if xx == 0:
         fig2.title.text = f'Confirmed Planets Per Year ({cumtots[-1]:,})'
-    else:
+    elif xx == 1:
         fig2.title.text = f'Cumulative Confirmed Planets ({cumtots[-1]:,})'
+    elif xx == 2:
+        fig2.title.text = f'Confirmed + Candidate Planets Per Year ({cumtots[-1]:,})'
+    else:
+        fig2.title.text = f'Cumulative Confirmed + Candidate Planets ({cumtots[-1]:,})'
+        fig2.title.align = 'right'
+    fig2.title.text_font_size = '20pt'
 
-    if xx == 1:
+    if (xx%2) == 1:
         legend[0].items.pop(1)
     else:
         legend[0].items.pop(0)
@@ -305,16 +423,16 @@ for xx in np.arange(2):
     # html page
     script, div = components(fig2)
     if xx == 0:
-        with open(embedfilelog, 'w') as ff:
+        with open(embedfilelog_name.format(txt), 'w') as ff:
             ff.write(div)
             ff.write(script)
     else:
-        with open(embedfilecumlog, 'w') as ff:
+        with open(embedfilecumlog_name.format(txt), 'w') as ff:
             ff.write(div)
             ff.write(script)    
 
 
-
+    plotting.show(fig2)
 
 
 

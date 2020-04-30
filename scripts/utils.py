@@ -145,6 +145,18 @@ def load_data():
                  (np.abs(dfcon['pl_orbper'] - ican['period']) < 1./60))[0]
         if len(res) == 1:
             dftoi.at[index, 'disp'] = 'Confirmed'
+            
+    # add in a column for the publication year of the K2 candidates
+    yrs = []
+    for ival in dfk2['k2c_reflink']:
+        yrs.append(int(ival.split('ET_AL__')[1][:4]))
+    dfk2['year'] = yrs
+    
+    # the year the TOI was found
+    yrs = []
+    for ival in dftoi['Date TOI Alerted (UTC)']:
+        yrs.append(int(ival[:4]))
+    dftoi['year'] = yrs
 
     return dfcon, dfkoi, dfk2, dftoi
 
