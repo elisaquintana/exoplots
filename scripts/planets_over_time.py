@@ -292,7 +292,7 @@ for xx in np.arange(4):
             ff.write(div)
             ff.write(script)
     
-    plotting.show(fig)
+    # plotting.show(fig)
     
 # now do the same thing but on log scale
 
@@ -432,7 +432,7 @@ for xx in np.arange(4):
             ff.write(script)    
 
 
-    plotting.show(fig2)
+    # plotting.show(fig2)
 
 
 
