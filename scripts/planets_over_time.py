@@ -353,7 +353,7 @@ for xx in np.arange(4):
     
     # add the first y-axis's label and use our custom log formatting for both axes
     fig2.yaxis.axis_label = 'Number'
-    fig2.yaxis.formatter = FuncTickFormatter(code=log_axis_labels(max_tick=4))
+    fig2.yaxis.formatter = FuncTickFormatter(code=log_axis_labels(max_tick=5.01))
     
     # add the x-axis's label and use our custom log formatting
     if xx < 2:
