@@ -1,7 +1,4 @@
-import numpy as np
-
 from utils import load_data
-
 
 
 def get_discovery_year():
@@ -11,13 +8,17 @@ def get_discovery_year():
     different tables to get year of discovery instead of year of confirmation
     that is listed in the confirmed planets table.
     """
+    from glob import glob
+    import numpy as np
+    import pandas as pd
+
     # load the data
     dfcon, dfkoi, dfk2, dftoi = load_data()
     
     # set up the appropriate columns
     dfcon['year_disc'] = dfcon['pl_disc'] * 1
     dfk2['year_disc'] = dfk2['year'] * 1
-    dfkoi['year_disc'] = 1990
+    dfkoi['year_disc'] = 1950
     dftoi['year_disc'] = dftoi['year'] * 1
     
     # check that we're including all K2 planets, but only counting them once
@@ -89,6 +90,50 @@ def get_discovery_year():
         k2yr = dfk2['year'][dfk2['epic_candname'] == ican['epic_candname']].min()
         dfk2.at[index, 'year_disc'] = k2yr
     
+    # first go through and assign KOIs the year they first showed up in a KOI
+    # catalog. We're assuming in this process that a particular KOI number will
+    # always refer to the same planet.
+    dfkoi['koi_year'] = 1990
+    
+    # these first 2 KOI tables aren't archived on Exoplanet Archive
+    earlykois = ['data/koi1.txt', 'data/koi2.txt']
+    allkois = glob('data/kepler-kois-q*')
+    allkois.sort()
+    # year the KOI tables were published
+    koiyears = [2013, 2014, 2015, 2015, 2016, 2018]
+    
+    # load the two early KOI tables. Just use KOI names
+    k1 = np.loadtxt(earlykois[0], dtype='<U12', usecols=(0,))
+    for ii in np.arange(k1.size):
+        k1[ii] = 'KOI-' + k1[ii]
+        
+    k2 = np.loadtxt(earlykois[1], dtype='<U12', usecols=(0,), skiprows=73)
+    for ii in np.arange(k2.size):
+        k2[ii] = 'KOI-' + k2[ii]
+        
+    # load the archived KOI tables
+    dfs = []
+    for ifile in allkois:
+        df = pd.read_csv(ifile)
+        df['kepoi_name'].replace(to_replace='K0+', value='KOI-',
+                                    regex=True, inplace=True)
+        dfs.append(df)
+
+    # find the first time a particular KOI number is mentioned and set its year    
+    for index, row in dfkoi.iterrows():
+        ikoi = row['kepoi_name']
+        if ikoi in k1 or ikoi in k2:
+            dfkoi.at[index, 'koi_year'] = 2011
+            continue
+        for ii, df in enumerate(dfs):
+            if ikoi in df['kepoi_name'].values:
+                dfkoi.at[index, 'koi_year'] = koiyears[ii]
+                break
+    
+    assert dfkoi['koi_year'].min() == 2011 and dfkoi['koi_year'].max() == 2018
+    
+    dfkoi['year_disc'] = dfkoi['koi_year'] * 1
+    
     # there's not an easy way to tie confirmed planets in the KOI table to entries
     # in the confirmed planets table. instead match by RA/Dec/Period
     koicon = dfkoi['koi_disposition'] == 'Confirmed'
@@ -101,6 +146,10 @@ def get_discovery_year():
     excluded = ['KOI-806.01', 'KOI-806.03', 'KOI-142.01', 'KOI-1274.01',
                 'KOI-1474.01', 'KOI-1599.01', 'KOI-377.01', 'KOI-377.02',
                 'KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-5622.01']
+    # what the name is in the confirmed planets table
+    real = ['Kepler-30 d', 'Kepler-30 b', 'KOI-142 b', 'Kepler-421 b',
+            'Kepler-419 b', 'KOI-1599.01', 'Kepler-9 b', 'Kepler-9 c',
+            'Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1635 b']
     
     # make sure all confirmed KOIs are in the confirmed table exactly once
     for index, icon in dfkoi[koicon].iterrows():
@@ -108,8 +157,16 @@ def get_discovery_year():
                  (np.abs(dfcon['dec'] - icon['dec']) < 1./60) & 
                  (np.abs(dfcon['pl_orbper'] - icon['koi_period']) < 1./60))[0]
         if len(res) != 1:
-            # special cases I know about that we can ignore
+            # special cases I know about that we can match up manually
             assert icon['kepoi_name'] in excluded
+            rname = real[excluded.index(icon['kepoi_name'])]
+            res = np.where(dfcon['pl_name'] == rname)[0]
+            assert len(res) == 1
+        # make sure both tables have the same discovery year
+        koiyr = icon['koi_year']
+        conyr = dfcon.at[res[0], 'pl_disc']
+        dfcon.at[res[0], 'year_disc'] = min(koiyr, conyr)
+        dfkoi.at[index, 'year_disc'] = min(koiyr, conyr)
     
     # make sure all candidate KOIs aren't in the confirmed table
     for index, ican in dfkoi[koican].iterrows():
@@ -145,4 +202,4 @@ def get_discovery_year():
 
 if __name__ == "__main__":
     dfcon, dfkoi, dfk2, dftoi = get_discovery_year()
-
+    pass

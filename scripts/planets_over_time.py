@@ -86,14 +86,14 @@ for ii, imeth in enumerate(methods):
             k2can = (dfk2['k2c_disp'] == 'Candidate') & dfk2['k2c_recentflag'].astype(bool)
             pcct += (dfk2['year_disc'][k2can] == iyear).sum()
             
-            # XXX: add kois
+            koican = dfkoi['koi_disposition'] == 'Candidate'
+            pcct += (dfkoi['year_disc'][koican] == iyear).sum()
         
         pcll.append(pcct)
         pcisum.append(pcisum[-1] + pcct)
     
     if imeth == 'Transit':
-        # XXX: add kois
-        ntot += toican.sum() + k2can.sum()
+        ntot += toican.sum() + k2can.sum() + koican.sum()
     
     conisum.pop(0)
     pcisum.pop(0)
@@ -259,8 +259,19 @@ for xx in np.arange(4):
         x_units='screen', y_units='screen'
     )
     
+    if xx > 1:
+        yup = 80
+    else:
+        yup = 70
+    
     label_opts3 = dict(
-        x=612, y=64,
+        x=612, y=yup,
+        x_units='screen', y_units='screen', text_align='right',
+        text_font_size='9pt'
+    )
+    
+    label_opts4 = dict(
+        x=612, y=yup+4,
         x_units='screen', y_units='screen', text_align='right',
         text_font_size='9pt'
     )
@@ -269,14 +280,18 @@ for xx in np.arange(4):
     # when did the data last get updated
     modtimestr = get_update_time().strftime('%Y %b %d')
     msg3 = 'Data: NASA Exoplanet Archive'
+    msg4 = 'and ExoFOP-TESS'
     
     caption1 = Label(text=msg1, **label_opts1)
     caption2 = Label(text=modtimestr, **label_opts2)
     caption3 = Label(text=msg3, **label_opts3)
+    caption4 = Label(text=msg4, **label_opts4)
     
     fig.add_layout(caption1, 'below')
     fig.add_layout(caption2, 'below')
     fig.add_layout(caption3, 'below')
+    if xx > 1:
+        fig.add_layout(caption4, 'below')
     
     plotting.save(fig)
     
@@ -292,7 +307,7 @@ for xx in np.arange(4):
             ff.write(div)
             ff.write(script)
     
-    # plotting.show(fig)
+    plotting.show(fig)
     
 # now do the same thing but on log scale
 
@@ -398,8 +413,19 @@ for xx in np.arange(4):
         x_units='screen', y_units='screen'
     )
     
+    if xx > 1:
+        yup = 80
+    else:
+        yup = 70
+        
     label_opts3 = dict(
-        x=612, y=64,
+        x=612, y=yup,
+        x_units='screen', y_units='screen', text_align='right',
+        text_font_size='9pt'
+    )
+    
+    label_opts4 = dict(
+        x=612, y=yup+4,
         x_units='screen', y_units='screen', text_align='right',
         text_font_size='9pt'
     )
@@ -408,14 +434,18 @@ for xx in np.arange(4):
     # when did the data last get updated
     modtimestr = get_update_time().strftime('%Y %b %d')
     msg3 = 'Data: NASA Exoplanet Archive'
+    msg4 = 'and ExoFOP-TESS'
     
     caption1 = Label(text=msg1, **label_opts1)
     caption2 = Label(text=modtimestr, **label_opts2)
     caption3 = Label(text=msg3, **label_opts3)
+    caption4 = Label(text=msg4, **label_opts4)
     
     fig2.add_layout(caption1, 'below')
     fig2.add_layout(caption2, 'below')
     fig2.add_layout(caption3, 'below')
+    if xx > 1:
+        fig2.add_layout(caption4, 'below')
     
     plotting.save(fig2)
     
@@ -432,7 +462,7 @@ for xx in np.arange(4):
             ff.write(script)    
 
 
-    # plotting.show(fig2)
+    plotting.show(fig2)
 
 
 
