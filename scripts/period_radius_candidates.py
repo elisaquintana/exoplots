@@ -252,7 +252,7 @@ label_opts3 = dict(
     x=612, y=79,
     x_units='screen', y_units='screen', text_align='right',
     text_font_size='9pt'
-)
+) 
 
 label_opts4 = dict(
     x=612, y=83,
