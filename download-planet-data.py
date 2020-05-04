@@ -1,6 +1,7 @@
 """Downloads candidate and confirmed planet tables from NExSci"""
-import pandas as pd
 from datetime import datetime
+
+import pandas as pd
 
 NEXSCI_API = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph' \
              '-nstedAPI'
