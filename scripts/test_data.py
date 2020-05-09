@@ -148,11 +148,13 @@ def get_discovery_year():
     # and 5568 a KOI at 1/3 the confirmed period)
     excluded = ['KOI-806.01', 'KOI-806.03', 'KOI-142.01', 'KOI-1274.01',
                 'KOI-1474.01', 'KOI-1599.01', 'KOI-377.01', 'KOI-377.02',
-                'KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-5622.01']
+                'KOI-4441.01', 'KOI-5568.01', 'KOI-5475.01', 'KOI-5622.01',
+                'KOI-277.02', 'KOI-523.02', 'KOI-1783.02']
     # what the name is in the confirmed planets table
     real = ['Kepler-30 d', 'Kepler-30 b', 'KOI-142 b', 'Kepler-421 b',
             'Kepler-419 b', 'KOI-1599.01', 'Kepler-9 b', 'Kepler-9 c',
-            'Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1635 b']
+            'Kepler-1604 b', 'Kepler-1633 b', 'Kepler-1632 b', 'Kepler-1635 b',
+            'Kepler-36 b', 'Kepler-177 b', 'KOI-1783.02']
 
     # make sure all confirmed KOIs are in the confirmed table exactly once
     for index, icon in dfkoi[koicon].iterrows():
