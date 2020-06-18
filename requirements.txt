@@ -1,4 +1,4 @@
 numpy
 pandas
-bokeh==2.1.0
+bokeh==2.0.2
 astropy
