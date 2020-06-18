@@ -178,5 +178,5 @@ plotting.save(fig)
 # html page
 script, div = components(fig)
 with open(embedfile, 'w') as ff:
-    ff.write(div)
     ff.write(script)
+    ff.write(div)

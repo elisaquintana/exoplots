@@ -312,12 +312,12 @@ for xx in np.arange(4):
     script, div = components(fig)
     if (xx % 2) == 0:
         with open(embedfile_name.format(txt), 'w') as ff:
-            ff.write(div)
             ff.write(script)
+            ff.write(div)
     else:
         with open(embedfilecum_name.format(txt), 'w') as ff:
-            ff.write(div)
             ff.write(script)
+            ff.write(div)
 
 # now do the same thing but on log scale
 
@@ -472,9 +472,9 @@ for xx in np.arange(4):
     script, div = components(fig2)
     if (xx % 2) == 0:
         with open(embedfilelog_name.format(txt), 'w') as ff:
-            ff.write(div)
             ff.write(script)
+            ff.write(div)
     else:
         with open(embedfilecumlog_name.format(txt), 'w') as ff:
-            ff.write(div)
             ff.write(script)
+            ff.write(div)
