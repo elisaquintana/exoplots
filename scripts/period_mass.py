@@ -174,9 +174,25 @@ fig.add_layout(caption3, 'below')
 
 plotting.save(fig)
 
+# because components is broken in bokeh 2.1.0, strip out the important bits
+# manually
+with open(fullfile, 'r') as ff:
+    lines = ff.readlines()
+start = 0
+while lines[start].strip() != '<body>':
+    start += 1
+start += 1
+end = len(lines) - 1
+while lines[end].strip() != '</body>':
+    end -= 1
+with open(embedfile, 'w') as ff:
+    for iline in lines[start:end]:
+        ff.write(iline)
+"""
 # save the individual pieces so we can just embed the figure without the whole
 # html page
 script, div = components(fig)
 with open(embedfile, 'w') as ff:
     ff.write(script)
     ff.write(div)
+"""
