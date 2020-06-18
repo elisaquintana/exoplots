@@ -245,7 +245,6 @@ for xx in np.arange(4):
     # legend.spacing = 10
     # legend.margin = 8
     legend[0].items = legend[0].items[::-1]
-    
 
     # overall figure title
     if xx == 0:
