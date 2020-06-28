@@ -26,7 +26,5 @@ attrs:
         orientation: "horizontal"
         title_text_font_style: "bold"
         title_standoff: 0
-        # intentionally left blank to turn into Python's None, which turns
-        # off borders on legends
-        border_line_color:
+        border_line_color: !!null
         click_policy: "hide"
