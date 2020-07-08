@@ -27,9 +27,9 @@ df.to_csv('data/k2-candidates-table.csv')
 
 # get the TOI list from ExoFOP-TESS.
 print('Downloading full TESS candidates table from ExoFOP...')
-#df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort'
-#                 '=toi&output=csv')
-#df.to_csv('data/tess-candidates.csv')
+df = pd.read_csv('https://exofop.ipac.caltech.edu/tess/download_toi.php?sort'
+                 '=toi&output=csv')
+df.to_csv('data/tess-candidates.csv')
 
 with open('data/last_update_time.txt', 'w') as ff:
     ff.write(str(datetime.now()))
