@@ -171,7 +171,7 @@ plotting.save(fig)
 
 # save the individual pieces so we can just embed the figure without the whole
 # html page
-script, div = components(fig)
+script, div = components(fig, theme=theme)
 with open(embedfile, 'w') as ff:
     ff.write(script)
     ff.write(div)

@@ -309,7 +309,7 @@ for xx in np.arange(4):
 
     # save the individual pieces so we can just embed the figure without the
     # whole html page
-    script, div = components(fig)
+    script, div = components(fig, theme=theme)
     if (xx % 2) == 0:
         with open(embedfile_name.format(txt), 'w') as ff:
             ff.write(script)
@@ -469,7 +469,7 @@ for xx in np.arange(4):
 
     # save the individual pieces so we can just embed the figure without the
     # whole html page
-    script, div = components(fig2)
+    script, div = components(fig2, theme=theme)
     if (xx % 2) == 0:
         with open(embedfilelog_name.format(txt), 'w') as ff:
             ff.write(script)
