@@ -1,0 +1,50 @@
+# this file controls the GitHub action that automatically downloads the latest
+# data tables every night and regenerates the plots
+name: Download updates and regenerate plots
+
+on:
+  # Trigger the workflow on push,
+  # but only for the master branch
+  push:
+    branches:
+      - master
+  schedule:
+    # run this job every day at 1:00 am UTC
+    - cron:  '0 1 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip')"
+    strategy:
+      # it should only run once, and python 3.7 is as good as any
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    # check out the repository to make changes
+    - uses: actions/checkout@v2
+    # get a local python going
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    # get all the up to date packages needed
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    # update the planet parameters tables
+    - name: Download files
+      run: |
+        python download-planet-data.py
+    # regenerate all the figures
+    - name: Update plots
+      run: |
+        ./update.sh
+    # push the changes back to the GitHub repository
+    # from https://github.com/marketplace/actions/git-auto-commit
+    - uses: stefanzweifel/git-auto-commit-action@v4.1.0
+      with:
+        commit_message: Rerun with updated planet lists
+        branch: master

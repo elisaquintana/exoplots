@@ -1,0 +1,4 @@
+numpy
+pandas
+bokeh==2.1.1
+astropy
